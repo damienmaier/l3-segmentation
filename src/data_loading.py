@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Generator
 
 import numpy as np
+import sklearn.model_selection
 
 from rootdir import PROJECT_ROOT_PATH
 
@@ -12,6 +13,20 @@ MASKS_FOLDER_NAME = "masks"
 
 DATASET_PATH = PROJECT_ROOT_PATH / "dataset"
 CACHE_FILE_PATH = PROJECT_ROOT_PATH / "cache" / "dataset.npy"
+
+
+def get_test_set():
+    _, X_test, _, y_test = _get_splitted_dataset()
+    return X_test, y_test
+
+
+def get_train_set():
+    X_train, _, y_train, _ = _get_splitted_dataset()
+    return X_train, y_train
+
+
+def _get_splitted_dataset():
+    return sklearn.model_selection.train_test_split(*load_dataset(), random_state=42)
 
 
 def load_dataset():
@@ -107,7 +122,7 @@ def _read_dataset_from_disk():
     def file_reader(csv_file_path: str):
         return np.loadtxt(csv_file_path, delimiter=",")
 
-    def dataset_element_files_reader(image_path:str, mask_path:str):
+    def dataset_element_files_reader(image_path: str, mask_path: str):
         return file_reader(image_path), file_reader(mask_path)
 
     dataset_data = map(dataset_element_files_reader, images_paths, masks_paths)
