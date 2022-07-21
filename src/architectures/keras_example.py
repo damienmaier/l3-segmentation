@@ -44,7 +44,7 @@ def _convolution_block(
         dilation_rate=dilation_rate,
         padding="same",
         use_bias=use_bias,
-        kernel_initializer=tf.keras._initializers.HeNormal(),
+        kernel_initializer=tf.keras.initializers.HeNormal(),
     )(block_input)
     x = layers.BatchNormalization()(x)
     return tf.nn.relu(x)
