@@ -11,7 +11,7 @@ import architectures.joachim
 
 MODEL_PATH = PROJECT_ROOT_PATH / "model"
 
-BATCH_SIZE = 10
+BATCH_SIZE = 100
 
 
 def train_best_model(X, Y):
@@ -35,7 +35,7 @@ def _train_model(X, Y):
 
     model.fit(
         x=batched_dataset,
-        epochs=5
+        epochs=100
     )
 
     model.save(MODEL_PATH)
