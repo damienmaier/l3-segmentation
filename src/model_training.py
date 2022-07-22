@@ -3,8 +3,13 @@ import tensorflow as tf
 
 from architectures.keras_example import DeeplabV3Plus
 from rootdir import PROJECT_ROOT_PATH
+
 from utils.preprocessing import triple_channels, single_channel
 import architectures.joachim
+
+
+
+MODEL_PATH = PROJECT_ROOT_PATH / "model"
 
 BATCH_SIZE = 10
 
@@ -33,4 +38,4 @@ def _train_model(X, Y):
         epochs=5
     )
 
-    model.save(PROJECT_ROOT_PATH / "model")
+    model.save(MODEL_PATH)
