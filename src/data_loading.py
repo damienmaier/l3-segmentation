@@ -62,7 +62,7 @@ def load_dataset():
             The images arrays
             The corresponding masks arrays
     """
-
+    print("begin loading data")
     if CACHE_FILE_PATH.exists():
         images, masks = np.load(CACHE_FILE_PATH, allow_pickle=True)
     else:
@@ -71,6 +71,7 @@ def load_dataset():
         data_to_save = np.stack([images, masks])
         np.save(CACHE_FILE_PATH, data_to_save)
 
+    print("end loading data")
     return images, masks
 
 
