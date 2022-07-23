@@ -1,7 +1,6 @@
 import keras.models
 import numpy as np
 
-import temp.cusom_objects_joachim
 from model_training import MODEL_PATH
 
 
