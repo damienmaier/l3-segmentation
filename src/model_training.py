@@ -2,13 +2,12 @@ import keras.models
 import numpy as np
 import tensorflow as tf
 
+import utils.preprocessing
 from architectures.keras_example import DeeplabV3Plus
 from rootdir import PROJECT_ROOT_PATH
 
 from utils.preprocessing import triple_channels, single_channel
 import architectures.joachim
-
-
 
 MODEL_PATH = PROJECT_ROOT_PATH / "model"
 
@@ -20,6 +19,7 @@ def train_best_model(X, Y):
 
 
 def _train_model(X, Y):
+    X = np.array(list(map(utils.preprocessing.clip, X)))
     X = np.array(list(map(single_channel, X)))
     X_dataset = tf.data.Dataset.from_tensor_slices(X)
     Y_dataset = tf.data.Dataset.from_tensor_slices(Y)
@@ -38,7 +38,7 @@ def _train_model(X, Y):
 
     model.fit(
         x=batched_dataset,
-        epochs=100
+        epochs=200
     )
 
     model.save(MODEL_PATH)
