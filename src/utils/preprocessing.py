@@ -7,3 +7,7 @@ def triple_channels(image):
 
 def single_channel(image):
     return image[..., np.newaxis]
+
+
+def clip(image):
+    return np.clip(image, -200, 200)
