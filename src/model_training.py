@@ -27,14 +27,14 @@ def _train_model(X, Y):
 
     batched_dataset = dataset.shuffle(len(X)).batch(BATCH_SIZE).prefetch(buffer_size=1)
 
-    # model = architectures.joachim.model_sma_detection((512, 512, 1))
-    #
-    # model.compile(
-    #     optimizer=tf.keras.optimizers.Adam(learning_rate=1e-6),
-    #     loss="binary_crossentropy",
-    # )
+    model = architectures.joachim.model_sma_detection((512, 512, 1))
 
-    model = keras.models.load_model(MODEL_PATH)
+    model.compile(
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-6),
+        loss="binary_crossentropy",
+    )
+
+    # model = keras.models.load_model(MODEL_PATH)
 
     model.fit(
         x=batched_dataset,
