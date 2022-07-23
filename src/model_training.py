@@ -38,7 +38,7 @@ def _train_model(X, Y):
 
     model.fit(
         x=batched_dataset,
-        epochs=200
+        epochs=100
     )
 
     model.save(MODEL_PATH)
