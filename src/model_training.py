@@ -4,6 +4,7 @@ import tensorflow as tf
 
 import utils.preprocessing
 from architectures.keras_example import DeeplabV3Plus
+from dataset.data_loading import get_train_set
 from rootdir import PROJECT_ROOT_PATH
 
 from utils.preprocessing import triple_channels, single_channel
@@ -14,8 +15,9 @@ MODEL_PATH = PROJECT_ROOT_PATH / "model"
 BATCH_SIZE = 10
 
 
-def train_best_model(X, Y):
-    _train_model(X, Y)
+def get_best_model():
+    images, masks = get_train_set()
+    _train_model(images, masks)
 
 
 def _train_model(X, Y):
@@ -30,7 +32,7 @@ def _train_model(X, Y):
     model = architectures.joachim.model_sma_detection((512, 512, 1))
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-6),
+        optimizer=tf.keras.optimizers.Adam(),
         loss="binary_crossentropy",
     )
 

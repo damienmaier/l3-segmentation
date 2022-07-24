@@ -1,5 +1,5 @@
 .idea
 __pycache__
-dataset
-cache
+original dataset
+preloaded dataset
 model
