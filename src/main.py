@@ -1,3 +1,5 @@
-from model_training import get_best_model
+import model_training
+import predict
 
-get_best_model()
+model_training.get_best_model()
+# predict.compute_predictions_for_test_set()
