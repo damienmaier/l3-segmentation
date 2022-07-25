@@ -4,6 +4,21 @@ from keras.applications.densenet import layers
 from keras.initializers.initializers_v1 import RandomNormal
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, UpSampling2D
 
+from utils.preprocessing import single_channel, clip
+
+
+def pre_process(image):
+    image = clip(image)
+    image = single_channel(image)
+
+    return image
+
+
+def post_process(model_output):
+    model_output_2d = np.squeeze(model_output)
+    predicted_mask = (model_output_2d > 0.5).astype(int)
+    return predicted_mask
+
 
 def model_sma_detection(input_shape):
     input = Input(shape=input_shape)
@@ -88,6 +103,7 @@ def _fcn_layers(input, num_channels, num_channels_in):
         kernel_initializer=_initializers(num_channels),
     )(x)
     return x  # BatchNormalization()(x)
+
 
 def _fcn_up_conv(input_conv, input_conc, num_channels):
     """"""
