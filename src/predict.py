@@ -1,18 +1,23 @@
 import keras.models
 import numpy as np
 
+import config
+import dataset.data_loading
+import rootdir
+
+from architectures.joachim import pre_process, post_process
 from model_training import MODEL_PATH
 
+TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted masks.npy"
+
 model = keras.models.load_model(MODEL_PATH)
-model.summary()
 
 
-def predict(image):
-    print("begin prediction")
-    model_output = model.predict(np.array([image]))
-    print("end prediction")
+def predict(images):
+    pre_processed_images = np.array(list(map(pre_process, images)))
+    model_output = model.predict(pre_processed_images, batch_size=config.PREDICTION_BATCH_SIZE)
+    predicted_masks = list(map(post_process, model_output))
 
-    model_output_2d = np.squeeze(model_output)
-    predicted_mask = (model_output_2d > 0.5).astype(int)
+    return predicted_masks
 
-    return predicted_mask
+
