@@ -21,3 +21,12 @@ def predict(images):
     return predicted_masks
 
 
+def compute_predictions_for_test_set():
+    if TEST_SET_PREDICTIONS_PATH.exists():
+        print("Error, the predictions have already been computed")
+    else:
+        images_test, _ = dataset.data_loading.get_test_set()
+        predicted_masks = predict(images_test)
+        array_to_save = np.array(predicted_masks)
+        print(array_to_save.shape)
+        np.save(TEST_SET_PREDICTIONS_PATH, array_to_save)
