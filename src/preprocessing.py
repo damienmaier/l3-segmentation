@@ -1,4 +1,5 @@
 import numpy as np
+from PIL import Image
 
 
 def triple_channels(image):
@@ -15,3 +16,5 @@ def single_channel(image):
 
 def clip(image):
     return np.clip(image, -200, 200)
+
+
