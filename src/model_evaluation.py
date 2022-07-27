@@ -1,16 +1,22 @@
 import random
 import statistics
 
-import sklearn
+import numpy as np
+import pandas
+import seaborn
 from matplotlib import pyplot as plt
 
 import utils.display_image
-import pandas
-import seaborn
 
 
 def dice_coefficient(mask1, mask2):
-    return sklearn.metrics.f1_score(mask1.ravel(), mask2.ravel())
+    assert(mask1.ndim == 2)
+    assert(mask2.ndim == 2)
+
+    intersection_size = np.count_nonzero(np.logical_and(mask1, mask2))
+    mask1_size = np.count_nonzero(mask1)
+    mask2_size = np.count_nonzero(mask2)
+    return 2 * intersection_size / (mask1_size + mask2_size)
 
 
 def dice_coefficients(masks1, masks2):
@@ -23,7 +29,7 @@ def average_dice_coefficient(masks1, masks2):
 
 
 def model_performance_summary(images, true_masks, predicted_masks):
-    for image, true_mask, predicted_mask in random.sample(list(zip(images, true_masks, predicted_masks)), 50):
+    for image, true_mask, predicted_mask in random.sample(list(zip(images, true_masks, predicted_masks)), 10):
         utils.display_image.display_ct_scan_image(image)
         utils.display_image.display_ct_scan_image_and_mask(image, predicted_mask)
         utils.display_image.display_ct_scan_image_and_two_masks(image=image, blue_mask=true_mask,
