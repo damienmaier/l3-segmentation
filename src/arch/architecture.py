@@ -4,7 +4,7 @@ from typing import Callable
 import keras
 import numpy as np
 
-import arch._preprocessing
+import preprocessing
 import arch.model_building.joachim
 
 
@@ -28,8 +28,8 @@ class Architecture:
 
 
 def _joachim_preprocessing(image: np.ndarray):
-    image = arch._preprocessing.clip(image)
-    image = arch._preprocessing.single_channel(image)
+    image = preprocessing.clip(image)
+    image = preprocessing.single_channel(image)
     return image
 
 
