@@ -23,6 +23,13 @@ def get_test_set():
     return images, masks
 
 
+def get_random_train_validation_split():
+    images, masks = get_train_set()
+    images_train, images_validation, masks_train, masks_validation = \
+        sklearn.model_selection.train_test_split(images, masks)
+    return images_train, images_validation, masks_train, masks_validation
+
+
 def preload_original_dataset():
     """
         The dataset directory is expected to have the following structure:
