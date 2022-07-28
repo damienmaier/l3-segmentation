@@ -90,16 +90,18 @@ class MyHyperModel(keras_tuner.HyperModel):
 
     def fit(self, hp: keras_tuner.HyperParameters, model: keras.Model, images: np.ndarray, masks: np.ndarray,
             *args, **kwargs):
-
+        print("a")
         pixels_weights = np.array(list(map(_get_mask_pixels_weights, masks)))
+        print("b")
         # for an unknown reason, it is necessary for the weights to have this shape
         pixels_weights = pixels_weights.reshape(-1, 512, 512, 1)
+        print("c")
 
         (images_train, images_validation,
          masks_train, masks_validation,
          pixels_weights_train, pixels_weights_validation) = \
             sklearn.model_selection.train_test_split(images, masks, pixels_weights)
-
+        print("d")
         if hp.Boolean("weighted loss", default=True):
             train_data = images_train, masks_train, pixels_weights_train
             validation_data = images_validation, masks_validation, pixels_weights_validation
@@ -107,9 +109,11 @@ class MyHyperModel(keras_tuner.HyperModel):
             train_data = images_train, masks_train
             validation_data = images_validation, masks_validation
 
+        print("e")
         train_dataset = _create_dataset_from_data(train_data, config.TRAINING_BATCH_SIZE)
         validation_dataset = _create_dataset_from_data(validation_data, config.PREDICTION_BATCH_SIZE)
 
+        print("f")
         print(next(iter(train_dataset)))
 
         return model.fit(
