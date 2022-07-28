@@ -4,6 +4,7 @@ import tensorflow as tf
 import arch.model_building.joachim
 import arch.custom_layers
 import config
+import model_evaluation
 
 
 def get_best_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
@@ -26,6 +27,7 @@ def _train_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
     model.compile(
         optimizer=tf.keras.optimizers.Adam(),
         loss="binary_crossentropy",
+        metrics=model_evaluation.dice_metric_for_tf_model()
     )
 
     model.fit(
