@@ -26,16 +26,14 @@ def _train_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
     model = arch.model_building.joachim.model_sma_detection()
 
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
         loss="binary_crossentropy",
         metrics=model_evaluation.dice_metric_for_tf_model()
     )
 
-    # model = keras.models.load_model(MODEL_PATH)
-
     model.fit(
         x=batched_dataset,
-        epochs=100
+        epochs=10
     )
 
     return model
