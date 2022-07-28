@@ -115,7 +115,7 @@ class MyHyperModel(keras_tuner.HyperModel):
         return model.fit(
             x=train_dataset,
             validation_data=validation_dataset,
-            epochs=2,
+            epochs=10,
             *args, **kwargs
         )
 

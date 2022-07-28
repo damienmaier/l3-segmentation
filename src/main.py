@@ -37,10 +37,12 @@ def evaluate_performance_of_predictions_on_test_set():
 # dataset.data_loading.preload_original_dataset()
 
 # -------- Tune model --------
-find_best_model()
+# find_best_model()
 
 # -------- Compute predictions on test set --------
 # compute_predictions_for_test_set()
 
 # -------- Visualize performance --------
 # evaluate_performance_of_predictions_on_test_set()
+
+model_training.train_default_model()
