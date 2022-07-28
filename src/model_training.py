@@ -44,22 +44,33 @@ def _add_final_round_layer(model: keras.Model) -> keras.Model:
     return model_with_final_round_layer
 
 
-def _create_dataset_from_data(data, batch_size: int) -> tf.data.Dataset:
-    print(1)
-    base_dataset = tf.data.Dataset.from_tensor_slices(data)
-    print(2)
-    prepared_dataset = base_dataset.shuffle(len(data[0])).batch(batch_size).prefetch(buffer_size=1)
-    print(3)
+def _create_dataset_from_data(images: np.ndarray, masks: np.ndarray, batch_size: int,
+                              add_pixel_weights: bool) -> tf.data.Dataset:
+    if add_pixel_weights:
+        def get_pixels_weights_values_for_mask(mask: np.ndarray):
+            weight_for_0, weight_for_1 = sklearn.utils.class_weight.compute_class_weight(
+                class_weight="balanced",
+                classes=[0, 1],
+                y=mask.flat
+            )
+            return weight_for_0, weight_for_1
+
+        pixel_weights_values = np.array(list(map(get_pixels_weights_values_for_mask, masks)))
+        base_dataset_compressed_weights = tf.data.Dataset.from_tensor_slices((images, masks, pixel_weights_values))
+
+        def get_image_mask_and_weights_array(image, mask, weights_values):
+            weights_array_if_full_0 = tf.fill(dims=mask.shape, value=weights_values[0])
+            weights_array_if_full_1 = tf.fill(dims=mask.shape, value=weights_values[1])
+            weights_array = tf.where(condition=(mask == 0), x=weights_array_if_full_0, y=weights_array_if_full_1)
+            weights_array = tf.reshape(weights_array, shape=(512, 512, 1))
+            return image, mask, weights_array
+
+        base_dataset = base_dataset_compressed_weights.map(get_image_mask_and_weights_array)
+    else:
+        base_dataset = tf.data.Dataset.from_tensor_slices((images, masks))
+
+    prepared_dataset = base_dataset.shuffle(len(images)).batch(batch_size).prefetch(buffer_size=1)
     return prepared_dataset
-
-
-def _get_mask_pixels_weights(mask: np.ndarray):
-    weight0, weight1 = sklearn.utils.class_weight.compute_class_weight(class_weight="balanced", classes=[0, 1],
-                                                                       y=mask.flat)
-    weights = np.zeros_like(mask)
-    weights[mask == 0] = weight0
-    weights[mask == 1] = weight1
-    return weights
 
 
 class MyHyperModel(keras_tuner.HyperModel):
@@ -93,31 +104,17 @@ class MyHyperModel(keras_tuner.HyperModel):
 
     def fit(self, hp: keras_tuner.HyperParameters, model: keras.Model,
             *args, **kwargs):
-        print("a")
-        # pixels_weights = np.array(list(map(_get_mask_pixels_weights, masks)))
-        print("b")
-        # for an unknown reason, it is necessary for the weights to have this shape
-        # pixels_weights = pixels_weights.reshape(-1, 512, 512, 1)
-        print("c")
 
         images_train, images_validation, masks_train, masks_validation = dataset.data_loading.get_random_train_validation_split()
-        print("d")
-        if hp.Boolean("weighted loss", default=True):
-            pixels_weights_train = np.array(list(map(_get_mask_pixels_weights, masks_train)))
-            pixels_weights_train = pixels_weights_train.reshape(-1, 512, 512, 1)
-            train_data = images_train, masks_train, pixels_weights_train
-            pixels_weights_validation = np.array(list(map(_get_mask_pixels_weights, masks_validation)))
-            pixels_weights_validation = pixels_weights_validation.reshape(-1, 512, 512, 1)
-            validation_data = images_validation, masks_validation, pixels_weights_validation
-        else:
-            train_data = images_train, masks_train
-            validation_data = images_validation, masks_validation
 
-        print("e")
-        train_dataset = _create_dataset_from_data(train_data, config.TRAINING_BATCH_SIZE)
-        validation_dataset = _create_dataset_from_data(validation_data, config.PREDICTION_BATCH_SIZE)
+        use_weighted_loss = hp.Boolean("weighted loss", default=True)
 
-        print("f")
+        train_dataset = _create_dataset_from_data(images_train, masks_train,
+                                                  batch_size=config.TRAINING_BATCH_SIZE,
+                                                  add_pixel_weights=use_weighted_loss)
+        validation_dataset = _create_dataset_from_data(images_validation, masks_validation,
+                                                       batch_size=config.TRAINING_BATCH_SIZE,
+                                                       add_pixel_weights=use_weighted_loss)
         print(next(iter(train_dataset)))
 
         return model.fit(
