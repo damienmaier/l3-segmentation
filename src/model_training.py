@@ -104,8 +104,10 @@ class MyHyperModel(keras_tuner.HyperModel):
         print("d")
         if hp.Boolean("weighted loss", default=True):
             pixels_weights_train = np.array(list(map(_get_mask_pixels_weights, masks_train)))
+            pixels_weights_train = pixels_weights_train.reshape(-1, 512, 512, 1)
             train_data = images_train, masks_train, pixels_weights_train
             pixels_weights_validation = np.array(list(map(_get_mask_pixels_weights, masks_validation)))
+            pixels_weights_validation = pixels_weights_validation.reshape(-1, 512, 512, 1)
             validation_data = images_validation, masks_validation, pixels_weights_validation
         else:
             train_data = images_train, masks_train
