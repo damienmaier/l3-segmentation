@@ -36,11 +36,6 @@ def average_dice_coefficient(masks1: tf.Tensor, masks2: tf.Tensor):
     return tf.reduce_mean(dice_coefficients)
 
 
-def dice_metric_for_tf_model(true_masks: tf.Tensor, model_outputs: tf.Tensor):
-    predicted_masks = arch.custom_layers.RoundLayer()(model_outputs)
-    return dice_coefficients_between_multiple_pairs_of_masks(true_masks, predicted_masks)
-
-
 def model_performance_summary(images, true_masks, predicted_masks):
     for image, true_mask, predicted_mask in random.sample(list(zip(images, true_masks, predicted_masks)), 2):
         utils.display_image.display_ct_scan_image(image)
