@@ -94,16 +94,17 @@ class MyHyperModel(keras_tuner.HyperModel):
     def fit(self, hp: keras_tuner.HyperParameters, model: keras.Model, images: np.ndarray, masks: np.ndarray,
             *args, **kwargs):
         print("a")
-        pixels_weights = np.array(list(map(_get_mask_pixels_weights, masks)))
+        # pixels_weights = np.array(list(map(_get_mask_pixels_weights, masks)))
         print("b")
         # for an unknown reason, it is necessary for the weights to have this shape
-        pixels_weights = pixels_weights.reshape(-1, 512, 512, 1)
+        # pixels_weights = pixels_weights.reshape(-1, 512, 512, 1)
         print("c")
 
         (images_train, images_validation,
          masks_train, masks_validation,
-         pixels_weights_train, pixels_weights_validation) = \
-            sklearn.model_selection.train_test_split(images, masks, pixels_weights)
+         # pixels_weights_train, pixels_weights_validation
+         ) = \
+            sklearn.model_selection.train_test_split(images, masks)
         print("d")
         if hp.Boolean("weighted loss", default=False):
             train_data = images_train, masks_train, pixels_weights_train
