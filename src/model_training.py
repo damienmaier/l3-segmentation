@@ -105,7 +105,7 @@ class MyHyperModel(keras_tuner.HyperModel):
          pixels_weights_train, pixels_weights_validation) = \
             sklearn.model_selection.train_test_split(images, masks, pixels_weights)
         print("d")
-        if hp.Boolean("weighted loss", default=True):
+        if hp.Boolean("weighted loss", default=False):
             train_data = images_train, masks_train, pixels_weights_train
             validation_data = images_validation, masks_validation, pixels_weights_validation
         else:
