@@ -107,7 +107,7 @@ class MyHyperModel(keras_tuner.HyperModel):
 
         images_train, images_validation, masks_train, masks_validation = dataset.data_loading.get_random_train_validation_split()
 
-        use_weighted_loss = hp.Boolean("weighted loss", default=True)
+        use_weighted_loss = hp.Boolean("weighted loss", default=False)
 
         train_dataset = _create_dataset_from_data(images_train, masks_train,
                                                   batch_size=config.TRAINING_BATCH_SIZE,
