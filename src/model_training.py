@@ -27,7 +27,7 @@ def _train_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
     model.compile(
         optimizer=tf.keras.optimizers.Adam(),
         loss="binary_crossentropy",
-        metrics=model_evaluation.dice_metric_for_tf_model()
+        metrics=model_evaluation.dice_metric_for_tf_model
     )
 
     model.fit(
