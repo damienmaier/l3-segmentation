@@ -3,8 +3,7 @@ import numpy as np
 import tensorflow as tf
 import arch.model_building.joachim
 import arch.custom_layers
-
-BATCH_SIZE = 100
+import config
 
 
 def get_best_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
@@ -20,7 +19,7 @@ def _train_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
     masks_dataset = tf.data.Dataset.from_tensor_slices(masks)
     dataset = tf.data.Dataset.zip((images_dataset, masks_dataset))
 
-    batched_dataset = dataset.shuffle(len(images)).batch(BATCH_SIZE).prefetch(buffer_size=1)
+    batched_dataset = dataset.shuffle(len(images)).batch(config.TRAINING_BATCH_SIZE).prefetch(buffer_size=1)
 
     model = arch.model_building.joachim.model_sma_detection()
 
