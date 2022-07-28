@@ -45,8 +45,11 @@ def _add_final_round_layer(model: keras.Model) -> keras.Model:
 
 
 def _create_dataset_from_data(data, batch_size: int) -> tf.data.Dataset:
+    print(1)
     base_dataset = tf.data.Dataset.from_tensor_slices(data)
+    print(2)
     prepared_dataset = base_dataset.shuffle(len(data[0])).batch(batch_size).prefetch(buffer_size=1)
+    print(3)
     return prepared_dataset
 
 
