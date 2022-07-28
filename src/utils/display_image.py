@@ -12,6 +12,11 @@ def display_ct_scan_image(image):
     plt.show()
 
 
+def display_mask(mask):
+    _plot_image(mask)
+    plt.show()
+
+
 def display_ct_scan_image_and_mask(image, mask):
     _plot_ct_scan_image(image)
     _plot_mask(mask)
@@ -33,7 +38,8 @@ def display_ct_scan_image_and_two_masks(image, blue_mask, red_mask):
 
     _plot_ct_scan_image(image)
     _plot_mask(comparison_mask)
-    plt.text(x=0, y=500, s=f"Dice coefficient : {model_evaluation.dice_coefficient(blue_mask, red_mask):.3f}",
+    plt.text(x=0, y=500,
+             s=f"Dice coefficient : {model_evaluation.dice_coefficient_between_two_masks(blue_mask, red_mask):.3f}",
              backgroundcolor="white")
     plt.show()
 
