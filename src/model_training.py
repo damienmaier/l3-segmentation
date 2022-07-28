@@ -1,39 +1,34 @@
-import keras.models
+import keras
 import numpy as np
 import tensorflow as tf
 
-import utils.preprocessing
-from architectures.keras_example import DeeplabV3Plus
-from dataset.data_loading import get_train_set
-from rootdir import PROJECT_ROOT_PATH
-
-from utils.preprocessing import triple_channels, single_channel
-import architectures.joachim
-
-MODEL_PATH = PROJECT_ROOT_PATH / "model"
-
-BATCH_SIZE = 10
+import arch.custom_layers
+import arch.model_building.joachim
+import config
+import model_evaluation
 
 
-def get_best_model():
-    images, masks = get_train_set()
-    _train_model(images, masks)
+def get_best_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
+    best_model = _train_model(images, masks)
+    x = best_model.output
+    x = arch.custom_layers.RoundLayer()(x)
+    best_model_with_final_round_layer = keras.Model(best_model.input, x)
+    return best_model_with_final_round_layer
 
 
-def _train_model(X, Y):
-    X = np.array(list(map(utils.preprocessing.clip, X)))
-    X = np.array(list(map(single_channel, X)))
-    X_dataset = tf.data.Dataset.from_tensor_slices(X)
-    Y_dataset = tf.data.Dataset.from_tensor_slices(Y)
-    dataset = tf.data.Dataset.zip((X_dataset, Y_dataset))
+def _train_model(images: np.ndarray, masks: np.ndarray) -> keras.Model:
+    images_dataset = tf.data.Dataset.from_tensor_slices(images)
+    masks_dataset = tf.data.Dataset.from_tensor_slices(masks)
+    dataset = tf.data.Dataset.zip((images_dataset, masks_dataset))
 
-    batched_dataset = dataset.shuffle(len(X)).batch(BATCH_SIZE).prefetch(buffer_size=1)
+    batched_dataset = dataset.shuffle(len(images)).batch(config.TRAINING_BATCH_SIZE).prefetch(buffer_size=1)
 
-    model = architectures.joachim.model_sma_detection((512, 512, 1))
+    model = arch.model_building.joachim.model_sma_detection()
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(),
         loss="binary_crossentropy",
+        metrics=model_evaluation.dice_metric_for_tf_model()
     )
 
     # model = keras.models.load_model(MODEL_PATH)
@@ -43,4 +38,4 @@ def _train_model(X, Y):
         epochs=100
     )
 
-    model.save(MODEL_PATH)
+    return model
