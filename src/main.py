@@ -13,8 +13,7 @@ TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted mask
 
 def find_best_model():
     train_images, train_masks = dataset.data_loading.get_train_set()
-    best_model = model_training.get_best_model(train_images, train_masks)
-    best_model.save(MODEL_PATH)
+    model_training.explore_hyper_parameters(train_images, train_masks)
 
 
 def compute_predictions_for_test_set():
