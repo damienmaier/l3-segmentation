@@ -11,6 +11,7 @@ import config
 import dataset.data_loading
 import model_evaluation
 import rootdir
+import gc
 
 
 def explore_hyper_parameters():
@@ -29,12 +30,11 @@ def explore_hyper_parameters():
 
 
 def train_default_model():
-    images, masks = dataset.data_loading.get_train_set()
     hyper_model = MyHyperModel()
     hp = keras_tuner.HyperParameters()
     model = hyper_model.build(hp)
     model.summary()
-    hyper_model.fit(hp, model, images, masks)
+    hyper_model.fit(hp, model)
 
 
 def _add_final_round_layer(model: keras.Model) -> keras.Model:
@@ -91,7 +91,7 @@ class MyHyperModel(keras_tuner.HyperModel):
 
         return model
 
-    def fit(self, hp: keras_tuner.HyperParameters, model: keras.Model, images: np.ndarray, masks: np.ndarray,
+    def fit(self, hp: keras_tuner.HyperParameters, model: keras.Model,
             *args, **kwargs):
         print("a")
         # pixels_weights = np.array(list(map(_get_mask_pixels_weights, masks)))
@@ -100,14 +100,12 @@ class MyHyperModel(keras_tuner.HyperModel):
         # pixels_weights = pixels_weights.reshape(-1, 512, 512, 1)
         print("c")
 
-        (images_train, images_validation,
-         masks_train, masks_validation,
-         # pixels_weights_train, pixels_weights_validation
-         ) = \
-            sklearn.model_selection.train_test_split(images, masks)
+        images_train, images_validation, masks_train, masks_validation = dataset.data_loading.get_random_train_validation_split()
         print("d")
-        if hp.Boolean("weighted loss", default=False):
+        if hp.Boolean("weighted loss", default=True):
+            pixels_weights_train = np.array(list(map(_get_mask_pixels_weights, masks_train)))
             train_data = images_train, masks_train, pixels_weights_train
+            pixels_weights_validation = np.array(list(map(_get_mask_pixels_weights, masks_validation)))
             validation_data = images_validation, masks_validation, pixels_weights_validation
         else:
             train_data = images_train, masks_train
