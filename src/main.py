@@ -6,7 +6,6 @@ import model_evaluation
 import model_training
 import predict
 import rootdir
-import arch.architecture
 
 MODEL_PATH = rootdir.PROJECT_ROOT_PATH / "model"
 TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted masks.npy"
@@ -24,7 +23,7 @@ def compute_predictions_for_test_set():
     else:
         images_test, _ = dataset.data_loading.get_test_set()
         model = keras.models.load_model(MODEL_PATH)
-        predicted_masks = predict.predict(images=images_test, model=model, architecture=arch.architecture.joachim)
+        predicted_masks = predict.predict(images=images_test, model=model)
         array_to_save = np.array(predicted_masks)
         np.save(TEST_SET_PREDICTIONS_PATH, array_to_save)
 
@@ -45,4 +44,4 @@ def evaluate_performance_of_predictions_on_test_set():
 # compute_predictions_for_test_set()
 
 # -------- Visualize performance --------
-evaluate_performance_of_predictions_on_test_set()
+# evaluate_performance_of_predictions_on_test_set()

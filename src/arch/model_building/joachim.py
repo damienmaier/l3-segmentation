@@ -3,11 +3,13 @@ from keras import Model, Input
 from keras.applications.densenet import layers
 from keras.initializers.initializers_v1 import RandomNormal
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, UpSampling2D
+import keras.layers
 
 
 def model_sma_detection():
-    input = Input(shape=(512, 512, 1))
-    x = BatchNormalization()(input)
+    input = Input(shape=(512, 512))
+    x = keras.layers.Reshape(target_shape=(512, 512, 1))(input)
+    x = BatchNormalization()(x)
 
     base_channel_num = 16
 
@@ -61,6 +63,7 @@ def model_sma_detection():
         kernel_initializer=_initializers(base_channel_num),
     )(x)
 
+    x = keras.layers.Reshape(target_shape=(512, 512))(x)
     model = Model(inputs=[input], outputs=[x])
 
     return model
