@@ -7,9 +7,8 @@ import keras.layers
 
 
 def model_sma_detection():
-    input = Input(shape=(512, 512))
-    x = keras.layers.Reshape(target_shape=(512, 512, 1))(input)
-    x = BatchNormalization()(x)
+    input = Input(shape=(512, 512, 1))
+    x = BatchNormalization()(input)
 
     base_channel_num = 16
 
@@ -63,7 +62,6 @@ def model_sma_detection():
         kernel_initializer=_initializers(base_channel_num),
     )(x)
 
-    x = keras.layers.Reshape(target_shape=(512, 512))(x)
     model = Model(inputs=[input], outputs=[x])
 
     return model

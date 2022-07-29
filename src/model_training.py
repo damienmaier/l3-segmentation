@@ -6,7 +6,7 @@ import numpy as np
 import sklearn.model_selection
 import tensorflow as tf
 
-import architectures._unet
+import architectures
 import config
 import custom_layers
 import dataset.data_loading
@@ -14,7 +14,6 @@ import model_evaluation
 
 
 def build_model(hp: keras_tuner.HyperParameters):
-
     architecture_name = hp.Choice("architecture", ["unet", "deeplabv3"], default="unet")
     base_model = architectures.architecture_builders[architecture_name]()
 
@@ -36,7 +35,9 @@ def build_model(hp: keras_tuner.HyperParameters):
 
     def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
         predicted_masks = custom_layers.RoundLayer()(model_outputs)
-        return model_evaluation.dice_coefficients_between_multiple_pairs_of_masks(true_masks, predicted_masks)
+        predicted_masks_2d = tf.reshape(predicted_masks, shape=(-1, 512, 512))
+        true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
+        return model_evaluation.dice_coefficients_between_multiple_pairs_of_masks(predicted_masks_2d, true_masks_2d)
 
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
@@ -88,11 +89,13 @@ def _create_tf_dataset_for_training(images_paths: list[pathlib.Path], masks_path
 
     shuffled_paths_dataset = paths_dataset.shuffle(buffer_size=paths_dataset.cardinality())
 
-    def load_tf_tensors_from_files(image_path: str, mask_path: str):
-        return dataset.data_loading.load_tf_tensor_from_file(image_path), dataset.data_loading.load_tf_tensor_from_file(
-            mask_path)
+    def get_tensors_from_files(image_path: str, mask_path: str):
+        image_tensor = _get_tensor_with_third_dimension_from_file(image_path)
+        mask_tensor = _get_tensor_with_third_dimension_from_file(mask_path)
 
-    base_dataset = shuffled_paths_dataset.map(load_tf_tensors_from_files)
+        return image_tensor, mask_tensor
+
+    base_dataset = shuffled_paths_dataset.map(get_tensors_from_files)
 
     if add_pixel_weights:
         base_dataset = base_dataset.map(_add_pixel_weights)
@@ -113,8 +116,9 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
 
     pixel_weights = tf.gather(class_weights, indices=tf.cast(mask, tf.int32))
 
-    # for an unknown reason the weights must have this shape,
-    # even if the images and masks have shape (512, 512)
-    pixel_weights = tf.reshape(pixel_weights, shape=(512, 512, 1))
-
     return image, mask, pixel_weights
+
+
+def _get_tensor_with_third_dimension_from_file(file_path: str):
+    tensor = dataset.data_loading.load_tf_tensor_from_file(file_path)
+    return tf.reshape(tensor, shape=(512, 512, 1))
