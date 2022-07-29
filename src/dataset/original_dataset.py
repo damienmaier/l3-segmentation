@@ -50,7 +50,7 @@ def load_original_dataset_from_disk():
     return images, masks
 
 
-class OriginalDatasetElement:
+class _OriginalDatasetElement:
     """
     Represents an element of the original dataset.
     """
@@ -70,9 +70,9 @@ class OriginalDatasetElement:
         return self.image_data.shape == (512, 512) and self.mask_data.shape == (512, 512)
 
 
-def _original_dataset_elements() -> list[OriginalDatasetElement]:
+def _original_dataset_elements() -> list[_OriginalDatasetElement]:
     dataset_elements = [
-        OriginalDatasetElement(dataset_subdirectory_path.name, file_path.name)
+        _OriginalDatasetElement(dataset_subdirectory_path.name, file_path.name)
         for dataset_subdirectory_path in ORIGINAL_DATASET_PATH.iterdir()
         for file_path in (dataset_subdirectory_path / IMAGES_FOLDER_NAME).iterdir()
     ]
