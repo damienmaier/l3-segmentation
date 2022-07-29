@@ -50,4 +50,4 @@ def evaluate_performance_of_predictions_on_test_set():
 # -------- Visualize performance --------
 # evaluate_performance_of_predictions_on_test_set()
 
-model_training.train_default_model()
+model_exploration.train_default_model()
