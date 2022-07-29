@@ -28,9 +28,10 @@ def load_tf_tensor_from_file(file_path: str) -> tf.Tensor:
     return tensor
 
 
-def get_tf_dataset_from_tensor_file_paths(tensor_file_paths) -> tf.data.Dataset:
-    paths_str_array = np.array(list(map(str, tensor_file_paths)))
-    return tf.data.Dataset.from_tensor_slices(paths_str_array).map(load_tf_tensor_from_file)
+def get_tf_tensor_from_tensor_file_paths(tensor_file_paths) -> tf.data.Dataset:
+    tensor_file_paths_str = map(str, tensor_file_paths)
+    tensors = list(map(load_tf_tensor_from_file, tensor_file_paths_str))
+    return tf.stack(tensors)
 
 
 def preload_original_dataset(images, masks):
