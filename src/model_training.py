@@ -43,32 +43,34 @@ def _add_final_round_layer(model: keras.Model) -> keras.Model:
     return model_with_final_round_layer
 
 
-def _create_dataset_from_data(images: np.ndarray, masks: np.ndarray, batch_size: int,
-                              add_pixel_weights: bool) -> tf.data.Dataset:
+def _create_fit_dataset(images_paths: np.ndarray, masks_paths: np.ndarray,
+                        batch_size: int, add_pixel_weights: bool) -> tf.data.Dataset:
+    images_dataset = dataset.data_loading.get_tf_dataset_from_tensor_file_paths(images_paths)
+    masks_dataset = dataset.data_loading.get_tf_dataset_from_tensor_file_paths(masks_paths)
+
+    base_dataset = tf.data.Dataset.zip(datasets=(images_dataset, masks_dataset))
+
     if add_pixel_weights:
-        def get_pixels_weights_values_for_mask(mask: np.ndarray):
-            weight_for_0, weight_for_1 = sklearn.utils.class_weight.compute_class_weight(
-                class_weight="balanced",
-                classes=[0, 1],
-                y=mask.flat
-            )
-            return weight_for_0, weight_for_1
+        def add_pixel_weights_to_dataset_element(image, mask):
+            mask_0_count = tf.cast(tf.math.count_nonzero(mask == 1), tf.float64)
+            mask_1_count = tf.cast(tf.math.count_nonzero(mask), tf.float64)
+            mask_size = tf.cast(tf.size(mask), tf.float64)
 
-        pixel_weights_values = np.array(list(map(get_pixels_weights_values_for_mask, masks)))
-        base_dataset_compressed_weights = tf.data.Dataset.from_tensor_slices((images, masks, pixel_weights_values))
+            weight_for_0 = mask_size / 2. / mask_0_count
+            weight_for_1 = mask_size / 2. / mask_1_count
+            weights = tf.stack([weight_for_0, weight_for_1])
 
-        def get_image_mask_and_weights_array(image, mask, weights_values):
-            weights_array_if_full_0 = tf.fill(dims=mask.shape, value=weights_values[0])
-            weights_array_if_full_1 = tf.fill(dims=mask.shape, value=weights_values[1])
-            weights_array = tf.where(condition=(mask == 0), x=weights_array_if_full_0, y=weights_array_if_full_1)
-            weights_array = tf.reshape(weights_array, shape=(512, 512, 1))
-            return image, mask, weights_array
+            pixel_weights = tf.gather(weights, indices=tf.cast(mask, tf.int32))
 
-        base_dataset = base_dataset_compressed_weights.map(get_image_mask_and_weights_array)
-    else:
-        base_dataset = tf.data.Dataset.from_tensor_slices((images, masks))
+            # for an unknown reason the weights must have this shape,
+            # even if the images and masks have shape (512, 512)
+            pixel_weights = tf.reshape(pixel_weights, shape=(512, 512, 1))
 
-    prepared_dataset = base_dataset.shuffle(len(images)).batch(batch_size).prefetch(buffer_size=1)
+            return image, mask, pixel_weights
+
+        base_dataset = base_dataset.map(add_pixel_weights_to_dataset_element)
+
+    prepared_dataset = base_dataset.shuffle(len(images_paths)).batch(batch_size).prefetch(buffer_size=1)
     return prepared_dataset
 
 
@@ -91,10 +93,15 @@ class MyHyperModel(keras_tuner.HyperModel):
             sampling="log",
             default=1e-4
         )
+
+        def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
+            predicted_masks = arch.custom_layers.RoundLayer()(model_outputs)
+            return model_evaluation.dice_coefficients_between_multiple_pairs_of_masks(true_masks, predicted_masks)
+
         model.compile(
             optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
             loss="binary_crossentropy",
-            metrics=_dice_metric,
+            metrics=dice,
             # avoid tf complaining from the fact that we give pixel weights without having a weighted metric
             weighted_metrics=[]
         )
@@ -104,16 +111,19 @@ class MyHyperModel(keras_tuner.HyperModel):
     def fit(self, hp: keras_tuner.HyperParameters, model: keras.Model,
             *args, **kwargs):
 
-        images_train, images_validation, masks_train, masks_validation = dataset.data_loading.get_random_train_validation_split()
+        images_paths, masks_paths = dataset.data_loading.get_train_set()
 
-        use_weighted_loss = hp.Boolean("weighted loss", default=True)
+        images_paths_train, images_paths_validation, masks_paths_train, masks_paths_validation = \
+            sklearn.model_selection.train_test_split(images_paths, masks_paths)
 
-        train_dataset = _create_dataset_from_data(images_train, masks_train,
-                                                  batch_size=config.TRAINING_BATCH_SIZE,
-                                                  add_pixel_weights=use_weighted_loss)
-        validation_dataset = _create_dataset_from_data(images_validation, masks_validation,
-                                                       batch_size=config.TRAINING_BATCH_SIZE,
-                                                       add_pixel_weights=use_weighted_loss)
+        use_weighted_loss = hp.Boolean("weighted loss", default=False)
+
+        train_dataset = _create_fit_dataset(images_paths_train, masks_paths_train,
+                                            batch_size=config.TRAINING_BATCH_SIZE,
+                                            add_pixel_weights=use_weighted_loss)
+        validation_dataset = _create_fit_dataset(images_paths_validation, masks_paths_validation,
+                                                 batch_size=config.TRAINING_BATCH_SIZE,
+                                                 add_pixel_weights=use_weighted_loss)
         print(next(iter(train_dataset)))
 
         return model.fit(
@@ -122,8 +132,3 @@ class MyHyperModel(keras_tuner.HyperModel):
             epochs=2,
             *args, **kwargs
         )
-
-
-def _dice_metric(true_masks: tf.Tensor, model_outputs: tf.Tensor):
-    predicted_masks = arch.custom_layers.RoundLayer()(model_outputs)
-    return model_evaluation.dice_coefficients_between_multiple_pairs_of_masks(true_masks, predicted_masks)
