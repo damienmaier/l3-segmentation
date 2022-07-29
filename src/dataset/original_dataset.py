@@ -7,7 +7,32 @@ IMAGES_FOLDER_NAME = "images"
 MASKS_FOLDER_NAME = "masks"
 
 
-def _load_original_dataset_from_disk():
+def load_original_dataset_from_disk():
+    """
+    The dataset directory is expected to have the following structure:
+        dataset directory
+            subdir1
+                images
+                    file1
+
+                    file2
+                masks
+                    file1
+
+                    file2
+            subdir2
+                images
+                    file3
+
+                    file4
+                masks
+                    file3
+
+                    file4
+            ...
+    The files must be CSV files containing a matrix of values separated by commas.
+    Matrices must have a 512 x 512 shape. Files containing a matrix with a different shape are ignored.
+    """
     dataset_elements = _original_dataset_elements()
 
     def get_dataset_elements_with_correct_shape():

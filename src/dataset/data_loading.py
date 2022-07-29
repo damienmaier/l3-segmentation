@@ -34,37 +34,11 @@ def get_tf_dataset_from_tensor_file_paths(tensor_file_paths) -> tf.data.Dataset:
     return tf.data.Dataset.from_tensor_slices(paths_str_array).map(load_tf_tensor_from_file)
 
 
-def preload_original_dataset():
-    """
-        The dataset directory is expected to have the following structure:
-            dataset directory
-                subdir1
-                    images
-                        file1
-
-                        file2
-                    masks
-                        file1
-
-                        file2
-                subdir2
-                    images
-                        file3
-
-                        file4
-                    masks
-                        file3
-
-                        file4
-                ...
-        The files must be CSV files containing a matrix of values separated by commas.
-        Matrices must have a 512 x 512 shape. Files containing a matrix with a different shape are ignored.
-    """
+def preload_original_dataset(images, masks):
     if PRELOADED_DATASET_PATH.exists():
         print("Error : a preloaded dataset already exists")
     else:
         PRELOADED_DATASET_PATH.mkdir()
-        images, masks = _load_original_dataset_from_disk()
         images_train, images_test, masks_train, masks_test = \
             sklearn.model_selection.train_test_split(images, masks, random_state=42)
 
