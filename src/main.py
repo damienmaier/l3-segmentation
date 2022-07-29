@@ -2,13 +2,19 @@ import numpy as np
 from tensorflow import keras
 
 import dataset.data_loading
+import dataset.original_dataset
 import model_evaluation
-import model_training
+import model_exploration
 import predict
 import rootdir
 
 MODEL_PATH = rootdir.PROJECT_ROOT_PATH / "model"
 TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted masks.npy"
+
+
+def create_preloaded_dataset_from_original_dataset():
+    images, masks = dataset.original_dataset.load_original_dataset_from_disk()
+    dataset.data_loading.preload_original_dataset(images, masks)
 
 
 def find_best_model():
@@ -32,9 +38,8 @@ def evaluate_performance_of_predictions_on_test_set():
     predicted_masks = np.load(TEST_SET_PREDICTIONS_PATH)
     model_evaluation.model_performance_summary(images=images, true_masks=true_masks, predicted_masks=predicted_masks)
 
-
 # -------- Prepare dataset --------
-# dataset.data_loading.preload_original_dataset()
+# create_preloaded_dataset_from_original_dataset()
 
 # -------- Tune model --------
 # find_best_model()

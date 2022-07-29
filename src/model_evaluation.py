@@ -5,7 +5,6 @@ import seaborn
 import tensorflow as tf
 from matplotlib import pyplot as plt
 
-import arch.custom_layers
 import utils.display_image
 
 

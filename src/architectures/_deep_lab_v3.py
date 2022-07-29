@@ -3,11 +3,19 @@
 from keras.applications.densenet import layers
 import tensorflow as tf
 
+import custom_layers
 
-def DeeplabV3Plus(image_size, num_classes):
-    model_input = tf.keras.Input(shape=(image_size, image_size, 3))
+
+def deep_lab_v3_plus():
+    image_size = 512
+    num_classes = 2
+
+    model_input = tf.keras.Input(shape=(image_size, image_size, 1))
+
+    x = custom_layers.GrayscaleToRGBLayer()(model_input)
+
     resnet50 = tf.keras.applications.ResNet50(
-        weights="imagenet", include_top=False, input_tensor=model_input
+        weights="imagenet", include_top=False, input_tensor=x
     )
     x = resnet50.get_layer("conv4_block6_2_relu").output
     x = _DilatedSpatialPyramidPooling(x)
@@ -26,8 +34,10 @@ def DeeplabV3Plus(image_size, num_classes):
         size=(image_size // x.shape[1], image_size // x.shape[2]),
         interpolation="bilinear",
     )(x)
-    model_output = layers.Conv2D(num_classes, kernel_size=(1, 1), padding="same")(x)
-    return tf.keras.Model(inputs=model_input, outputs=model_output)
+    x = layers.Conv2D(num_classes, kernel_size=(1, 1), padding="same")(x)
+    x = layers.Softmax(axis=3)(x)
+    x = x[:, :, :, :1]
+    return tf.keras.Model(inputs=model_input, outputs=x)
 
 
 def _convolution_block(
