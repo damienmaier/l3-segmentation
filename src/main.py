@@ -4,7 +4,7 @@ from tensorflow import keras
 import dataset.data_loading
 import dataset.original_dataset
 import model_evaluation
-import model_training
+import model_exploration
 import predict
 import rootdir
 

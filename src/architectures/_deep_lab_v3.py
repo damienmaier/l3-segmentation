@@ -4,7 +4,9 @@ from keras.applications.densenet import layers
 import tensorflow as tf
 
 
-def DeeplabV3Plus(image_size, num_classes):
+def deep_lab_v3_plus():
+    image_size = 512
+    num_classes = 2
     model_input = tf.keras.Input(shape=(image_size, image_size, 3))
     resnet50 = tf.keras.applications.ResNet50(
         weights="imagenet", include_top=False, input_tensor=model_input

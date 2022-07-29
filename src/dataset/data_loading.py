@@ -4,7 +4,6 @@ import numpy as np
 import sklearn.model_selection
 import tensorflow as tf
 
-from dataset.original_dataset import _load_original_dataset_from_disk
 from rootdir import PROJECT_ROOT_PATH
 
 PRELOADED_DATASET_PATH = PROJECT_ROOT_PATH / "preloaded dataset"
