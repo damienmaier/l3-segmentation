@@ -30,7 +30,7 @@ def build_model(hp: keras_tuner.HyperParameters):
         min_value=1e-5,
         max_value=1e-2,
         sampling="log",
-        default=1e-4
+        default=1e-100
     )
 
     def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
