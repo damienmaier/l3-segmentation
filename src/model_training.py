@@ -17,7 +17,7 @@ def build_model(hp: keras_tuner.HyperParameters):
     architecture_name = hp.Choice("architecture", ["unet", "deeplabv3"], default="deeplabv3")
     base_model = architectures.architecture_builders[architecture_name]()
 
-    if hp.Boolean("clip preprocessing", default=True):
+    if hp.Boolean("clip preprocessing", default=False):
         model = keras.models.Sequential()
         model.add(keras.Input(shape=(512, 512)))
         model.add(custom_layers.ClipLayer())
@@ -30,7 +30,7 @@ def build_model(hp: keras_tuner.HyperParameters):
         min_value=1e-5,
         max_value=1e-2,
         sampling="log",
-        default=1e-100
+        default=1e-4
     )
 
     def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
@@ -74,10 +74,11 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
     else:
         validation_dataset = None
 
+
     history = model.fit(
         x=train_dataset,
         validation_data=validation_dataset,
-        epochs=5,
+        epochs=10,
         *args, **kwargs
     )
 
