@@ -56,7 +56,7 @@ def _convolution_block(
         use_bias=use_bias,
         kernel_initializer=tf.keras.initializers.HeNormal(),
     )(block_input)
-    x = layers.BatchNormalization()(x)
+    # x = layers.BatchNormalization()(x)
     return tf.nn.relu(x)
 
 
