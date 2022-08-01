@@ -24,3 +24,15 @@ class GrayscaleToRGBLayer(keras.layers.Layer):
 
     def call(self, inputs, *args, **kwargs):
         return tf.image.grayscale_to_rgb(inputs)
+
+
+def normalization(train_dataset: tf.data.Dataset):
+    normalization_layer = keras.layers.Normalization(axis=None)
+
+    def get_image_only(image, *_):
+        image.set_shape((None, 512, 512, 1))
+        return image
+
+    images_dataset = train_dataset.map(get_image_only)
+    normalization_layer.adapt(images_dataset)
+    return normalization_layer

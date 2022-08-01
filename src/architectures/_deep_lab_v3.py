@@ -1,5 +1,5 @@
 # comes from https://keras.io/examples/vision/deeplabv3_plus/
-
+import keras.layers
 from keras.applications.densenet import layers
 import tensorflow as tf
 
@@ -10,9 +10,9 @@ def deep_lab_v3_plus():
     image_size = 512
     num_classes = 2
 
-    model_input = tf.keras.Input(shape=(image_size, image_size, 1))
+    model_input = x = tf.keras.Input(shape=(image_size, image_size, 1))
 
-    x = custom_layers.GrayscaleToRGBLayer()(model_input)
+    x = custom_layers.GrayscaleToRGBLayer()(x)
 
     resnet50 = tf.keras.applications.ResNet50(
         weights="imagenet", include_top=False, input_tensor=x
