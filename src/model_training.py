@@ -79,7 +79,9 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
 
 def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int,
                                   add_pixel_weights: bool) -> tf.data.Dataset:
-    dataset = dataset.map(utils.functional.function_on_pair(keras.layers.Reshape(target_shape=(512, 512, 1))))
+    dataset = dataset.map(
+        lambda image, mask: (image, keras.layers.Reshape(target_shape=(512, 512, 1))(mask))
+    )
     if add_pixel_weights:
         dataset = dataset.map(_add_pixel_weights)
     dataset = dataset.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
