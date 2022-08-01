@@ -17,7 +17,7 @@ def build_model(hp: keras_tuner.HyperParameters):
     architecture_name = hp.Choice("architecture", ["unet", "deeplabv3"], default="deeplabv3")
     base_model = architectures.architecture_builders[architecture_name]()
 
-    if hp.Boolean("clip preprocessing", default=False):
+    if hp.Boolean("clip preprocessing", default=True):
         model = keras.models.Sequential()
         model.add(keras.Input(shape=(512, 512)))
         model.add(custom_layers.ClipLayer())
@@ -61,7 +61,7 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
         images_paths_train = images_paths
         masks_paths_train = masks_paths
 
-    use_weighted_loss = hp.Boolean("weighted loss", default=False)
+    use_weighted_loss = hp.Boolean("weighted loss", default=True)
 
     train_dataset = _create_tf_dataset_for_training(images_paths_train, masks_paths_train,
                                                     batch_size=config.TRAINING_BATCH_SIZE,
@@ -78,7 +78,7 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
     history = model.fit(
         x=train_dataset,
         validation_data=validation_dataset,
-        epochs=10,
+        epochs=100,
         *args, **kwargs
     )
 
