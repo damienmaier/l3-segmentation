@@ -9,6 +9,7 @@ import config
 import custom_layers
 import data.preloaded.load
 import model_evaluation
+import preprocessing
 import utils.functional
 
 
@@ -31,17 +32,9 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
                                                            batch_size=config.PREDICTION_BATCH_SIZE,
                                                            add_pixel_weights=use_weighted_loss)
 
+    preprocessing_model = preprocessing.get_preprocessing_model(train_dataset, hp)
     final_model = keras.Sequential()
-    final_model.add(base_model.input)
-
-    if hp.Boolean("clip preprocessing", default=True):
-        final_model.add = custom_layers.ClipLayer()
-
-    if hp.Boolean("data normalization", default=True):
-        normalization_layer = keras.layers.Normalization(axis=None)
-        normalization_layer.adapt(train_dataset)
-        final_model.add(normalization_layer)
-
+    final_model.add(preprocessing_model)
     final_model.add(base_model)
 
     learning_rate = hp.Float(
