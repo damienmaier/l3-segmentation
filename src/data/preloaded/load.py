@@ -8,11 +8,20 @@ import utils.functional
 from data.preloaded import TRAIN_SET_PATH, TEST_SET_PATH, IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME
 
 
-def train_validation_tf_datasets():
-    images_paths_train, images_paths_validation, masks_paths_train, masks_paths_validation = _random_train_validation_split_paths()
+def train_validation_tf_datasets(random_state=None):
+    images_paths_train, images_paths_validation, masks_paths_train, masks_paths_validation =\
+        _random_train_validation_split_paths(random_state=random_state)
     train_dataset = _shuffled_tf_dataset_from_paths(images_paths_train, masks_paths_train)
     validation_dataset = _shuffled_tf_dataset_from_paths(images_paths_validation, masks_paths_validation)
     return train_dataset, validation_dataset
+
+
+def train_tf_dataset():
+    return _shuffled_tf_dataset_from_paths(*_train_set_paths())
+
+
+def test_tf_dataset():
+    return _shuffled_tf_dataset_from_paths(*_test_set_paths())
 
 
 def _shuffled_tf_dataset_from_paths(images_paths: np.ndarray, masks_paths: np.ndarray) -> tf.data.Dataset:
@@ -30,9 +39,9 @@ def _test_set_paths() -> list[np.ndarray, np.ndarray]:
     return _get_dataset_files_paths(TEST_SET_PATH, [IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME])
 
 
-def _random_train_validation_split_paths() -> list[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def _random_train_validation_split_paths(random_state=None) -> list[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     images_paths, masks_paths = _train_set_paths()
-    return sklearn.model_selection.train_test_split(images_paths, masks_paths)
+    return sklearn.model_selection.train_test_split(images_paths, masks_paths, random_state=random_state)
 
 
 def _load_tf_tensor_from_file(file_path: str) -> tf.Tensor:
