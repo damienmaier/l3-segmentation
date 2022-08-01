@@ -5,6 +5,7 @@ import data.original_dataset
 import data.preloaded.load
 import data.preloaded.save
 import model_evaluation
+import model_exploration
 import predict
 import rootdir
 
@@ -17,9 +18,8 @@ def create_preloaded_dataset_from_original_dataset():
     data.preloaded.save.preload_original_dataset(images, masks)
 
 
-def find_best_model():
-    train_images, train_masks = data.preloaded.load._train_set_paths()
-    model_training.explore_hyper_parameters(train_images, train_masks)
+def explore_models():
+    model_exploration.explore_hyper_parameters()
 
 
 def compute_predictions_for_test_set():
@@ -38,11 +38,12 @@ def evaluate_performance_of_predictions_on_test_set():
     predicted_masks = np.load(TEST_SET_PREDICTIONS_PATH)
     model_evaluation.model_performance_summary(images=images, true_masks=true_masks, predicted_masks=predicted_masks)
 
+
 # -------- Prepare dataset --------
 # create_preloaded_dataset_from_original_dataset()
 
 # -------- Tune model --------
-# find_best_model()
+# explore_models()
 
 # -------- Compute predictions on test set --------
 # compute_predictions_for_test_set()
