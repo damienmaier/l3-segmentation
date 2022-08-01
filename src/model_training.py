@@ -37,6 +37,11 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
     if hp.Boolean("clip preprocessing", default=True):
         final_model.add = custom_layers.ClipLayer()
 
+    if hp.Boolean("data normalization", default=True):
+        normalization_layer = keras.layers.Normalization(axis=None)
+        normalization_layer.adapt(train_dataset)
+        final_model.add(normalization_layer)
+
     final_model.add(base_model)
 
     learning_rate = hp.Float(
