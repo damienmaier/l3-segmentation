@@ -10,9 +10,7 @@ def deep_lab_v3_plus():
     image_size = 512
     num_classes = 2
 
-    model_input = x = tf.keras.Input(shape=(image_size, image_size))
-
-    x = keras.layers.Reshape(target_shape=(512, 512, 1))(x)
+    model_input = x = tf.keras.Input(shape=(image_size, image_size, 1))
 
     x = custom_layers.GrayscaleToRGBLayer()(x)
 
