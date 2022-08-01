@@ -1,29 +1,43 @@
-import pathlib
-
 import keras
+import keras.layers
 import keras_tuner
-import numpy as np
 import sklearn.model_selection
 import tensorflow as tf
 
 import architectures
 import config
 import custom_layers
-import dataset.data_loading
+import data.preloaded.load
 import model_evaluation
+import utils.functional
 
 
 def build_model(hp: keras_tuner.HyperParameters):
     architecture_name = hp.Choice("architecture", ["unet", "deeplabv3"], default="deeplabv3")
     base_model = architectures.architecture_builders[architecture_name]()
+    return base_model
+
+
+def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
+                train_dataset: tf.data.Dataset, validation_dataset: tf.data.Dataset,
+                *args, **kwargs):
+    use_weighted_loss = hp.Boolean("weighted loss", default=False)
+    train_dataset = _prepare_dataset_for_training(train_dataset,
+                                                  batch_size=config.TRAINING_BATCH_SIZE,
+                                                  add_pixel_weights=use_weighted_loss)
+
+    if validation_dataset is not None:
+        validation_dataset = _prepare_dataset_for_training(validation_dataset,
+                                                           batch_size=config.PREDICTION_BATCH_SIZE,
+                                                           add_pixel_weights=use_weighted_loss)
+
+    final_model = keras.Sequential()
+    final_model.add(base_model.input)
 
     if hp.Boolean("clip preprocessing", default=True):
-        model = keras.models.Sequential()
-        model.add(keras.Input(shape=(512, 512)))
-        model.add(custom_layers.ClipLayer())
-        model.add(base_model)
-    else:
-        model = base_model
+        final_model.add = custom_layers.ClipLayer()
+
+    final_model.add(base_model)
 
     learning_rate = hp.Float(
         "learning_rate",
@@ -40,7 +54,7 @@ def build_model(hp: keras_tuner.HyperParameters):
         true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
         return model_evaluation.dice_coefficients_between_multiple_pairs_of_masks(predicted_masks_2d, true_masks_2d)
 
-    model.compile(
+    final_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss="binary_crossentropy",
         metrics=dice,
@@ -48,33 +62,7 @@ def build_model(hp: keras_tuner.HyperParameters):
         weighted_metrics=[]
     )
 
-    return model
-
-
-def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
-                images_paths: list[pathlib.Path], masks_paths: list[pathlib.Path], use_validation_set: bool,
-                *args, **kwargs):
-    if use_validation_set:
-        images_paths_train, images_paths_validation, masks_paths_train, masks_paths_validation = \
-            sklearn.model_selection.train_test_split(images_paths, masks_paths)
-    else:
-        images_paths_train = images_paths
-        masks_paths_train = masks_paths
-
-    use_weighted_loss = hp.Boolean("weighted loss", default=False)
-
-    train_dataset = _create_tf_dataset_for_training(images_paths_train, masks_paths_train,
-                                                    batch_size=config.TRAINING_BATCH_SIZE,
-                                                    add_pixel_weights=use_weighted_loss)
-
-    if use_validation_set:
-        validation_dataset = _create_tf_dataset_for_training(images_paths_validation, masks_paths_validation,
-                                                             batch_size=config.PREDICTION_BATCH_SIZE,
-                                                             add_pixel_weights=use_weighted_loss)
-    else:
-        validation_dataset = None
-
-    history = model.fit(
+    history = final_model.fit(
         x=train_dataset,
         validation_data=validation_dataset,
         epochs=5,
@@ -84,28 +72,13 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
     return history
 
 
-def _create_tf_dataset_for_training(images_paths: list[pathlib.Path], masks_paths: list[pathlib.Path],
-                                    batch_size: int, add_pixel_weights: bool) -> tf.data.Dataset:
-    images_paths_str_array = np.array(list(map(str, images_paths)))
-    masks_paths_str_array = np.array(list(map(str, masks_paths)))
-    paths_dataset = tf.data.Dataset.from_tensor_slices((images_paths_str_array, masks_paths_str_array,))
-
-    shuffled_paths_dataset = paths_dataset.shuffle(buffer_size=paths_dataset.cardinality())
-
-    def get_tensors_from_files(image_path: str, mask_path: str):
-        image_tensor = _get_tensor_with_third_dimension_from_file(image_path)
-        mask_tensor = _get_tensor_with_third_dimension_from_file(mask_path)
-
-        return image_tensor, mask_tensor
-
-    base_dataset = shuffled_paths_dataset.map(get_tensors_from_files)
-
+def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int,
+                                  add_pixel_weights: bool) -> tf.data.Dataset:
+    dataset = dataset.map(utils.functional.function_on_pair(keras.layers.Reshape(target_shape=(512, 512, 1))))
     if add_pixel_weights:
-        base_dataset = base_dataset.map(_add_pixel_weights)
-
-    batched_dataset = base_dataset.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
-
-    return batched_dataset
+        dataset = dataset.map(_add_pixel_weights)
+    dataset = dataset.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
+    return dataset
 
 
 def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
@@ -120,8 +93,3 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
     pixel_weights = tf.gather(class_weights, indices=tf.cast(mask, tf.int32))
 
     return image, mask, pixel_weights
-
-
-def _get_tensor_with_third_dimension_from_file(file_path: str):
-    tensor = dataset.data_loading.load_tf_tensor_from_file(file_path)
-    return tf.reshape(tensor, shape=(512, 512, 1))

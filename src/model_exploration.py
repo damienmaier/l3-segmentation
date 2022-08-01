@@ -3,7 +3,7 @@ import keras.callbacks
 import keras_tuner
 
 import custom_layers
-import dataset.data_loading
+import data.preloaded.load
 import model_training
 import rootdir
 
@@ -40,7 +40,7 @@ class MyHyperModel(keras_tuner.HyperModel):
         return model_training.build_model(hp)
 
     def fit(self, hp: keras_tuner.HyperParameters, model: keras.Model, *args, **kwargs):
-        images_paths, masks_paths = dataset.data_loading.get_train_set()
+        train_dataset, validation_dataset = data.preloaded.load.train_validation_tf_datasets()
         return model_training.train_model(
-            hp=hp, model=model, images_paths=images_paths, masks_paths=masks_paths, use_validation_set=True,
+            hp=hp, model=model, train_dataset=train_dataset, validation_dataset=validation_dataset
             *args, **kwargs)
