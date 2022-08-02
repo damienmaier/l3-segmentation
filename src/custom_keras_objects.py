@@ -1,15 +1,18 @@
 import keras.layers
 import tensorflow as tf
+import keras.utils
 
 
+@tf.keras.utils.register_keras_serializable()
 class ClipLayer(keras.layers.Layer):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, trainable=True, name=None, dtype=None, dynamic=False, **kwargs):
+        super().__init__(trainable, name, dtype, dynamic, **kwargs)
 
     def call(self, inputs, *args, **kwargs):
         return tf.clip_by_value(inputs, -200, 200)
 
 
+@tf.keras.utils.register_keras_serializable()
 class RoundLayer(keras.layers.Layer):
     def __init__(self, trainable=True, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
@@ -18,6 +21,7 @@ class RoundLayer(keras.layers.Layer):
         return tf.math.round(inputs)
 
 
+@tf.keras.utils.register_keras_serializable()
 class GrayscaleToRGBLayer(keras.layers.Layer):
     def __init__(self, trainable=True, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)

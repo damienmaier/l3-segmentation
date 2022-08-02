@@ -7,19 +7,24 @@ import tensorflow as tf
 
 import architectures
 import config
-import custom_layers
-import data.preloaded.load
-import model_evaluation
+import custom_keras_objects
 import utils.functional
 
 
 def build_model(hp: keras_tuner.HyperParameters):
     architecture_name = hp.Choice("architecture", ["deeplabv3"], default="deeplabv3")
     base_model = architectures.architecture_builders[architecture_name]()
-    return base_model
+
+    final_model = keras.Sequential()
+    final_model.add(keras.Input(shape=(512, 512, 1)))
+    if hp.Fixed("clip preprocessing", value=True):
+        final_model.add(custom_keras_objects.ClipLayer())
+    final_model.add(base_model)
+
+    return final_model
 
 
-def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
+def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
                 train_dataset: tf.data.Dataset, validation_dataset: tf.data.Dataset = None,
                 *args, **kwargs):
     train_dataset = _prepare_dataset_for_training(train_dataset, batch_size=config.TRAINING_BATCH_SIZE,
@@ -29,12 +34,6 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
         validation_dataset = _prepare_dataset_for_training(validation_dataset, batch_size=config.TRAINING_BATCH_SIZE,
                                                            is_validation_dataset=True, hp=hp)
 
-    final_model = keras.Sequential()
-    final_model.add(keras.Input(shape=(512, 512, 1)))
-    if hp.Fixed("clip preprocessing", value=True):
-        final_model.add(custom_layers.ClipLayer())
-    final_model.add(base_model)
-
     learning_rate = hp.Float(
         "learning_rate",
         min_value=0.00005,
@@ -43,40 +42,22 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
         default=1e-4
     )
 
-    def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
-        predicted_masks = post_processing_model(model_outputs)
-        true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
-        return model_evaluation.dice_coefficients_between_mask_batches(predicted_masks, true_masks_2d)
-
-    final_model.compile(
+    model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss="binary_crossentropy",
-        metrics=dice,
+        metrics=custom_keras_objects.dice,
         # avoid tf complaining from the fact that we give pixel weights without having a weighted metric
         weighted_metrics=[]
     )
 
-    history = final_model.fit(
+    history = model.fit(
         x=train_dataset,
         validation_data=validation_dataset,
-        epochs=4,
+        epochs=2,
         *args, **kwargs
     )
 
     return history
-
-
-def train_default_model():
-    hp = keras_tuner.HyperParameters()
-    model = build_model(hp)
-    train_dataset = data.preloaded.load.train_tf_dataset(shuffle=True)
-    train_model(hp, base_model=model, train_dataset=train_dataset)
-    final_model = keras.Sequential()
-    final_model.add(keras.Input(shape=(512, 512)))
-    final_model.add(keras.layers.Reshape(target_shape=(512, 512, 1)))
-    final_model.add(model)
-    final_model.add(post_processing_model)
-    return final_model
 
 
 def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_validation_dataset: bool,
@@ -128,7 +109,4 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
     return image, mask, pixel_weights
 
 
-post_processing_model = keras.Sequential()
-post_processing_model.add(keras.Input(shape=(512, 512, 1)))
-post_processing_model.add(custom_layers.RoundLayer())
-post_processing_model.add(keras.layers.Reshape(target_shape=(512, 512)))
+
