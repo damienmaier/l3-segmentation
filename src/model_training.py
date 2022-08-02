@@ -32,8 +32,6 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
     final_model.add(keras.Input(shape=(512, 512, 1)))
     if hp.Boolean("clip preprocessing", default=True):
         final_model.add(custom_layers.ClipLayer())
-    if hp.Boolean("data normalization", default=True):
-        final_model.add(custom_layers.normalization(train_dataset))
     final_model.add(base_model)
 
     learning_rate = hp.Float(
@@ -92,7 +90,7 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
         dataset = dataset.map(random_left_right_flip)
 
     def gaussian_noise(image, mask):
-        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=50, default=25)
+        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=10, default=5)
         gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
         return gaussian_noise_layer(image, training=True), mask
 
