@@ -40,8 +40,10 @@ def compute_predictions_for_test_set():
 
 def evaluate_performance_of_predictions_on_test_set():
     images_dataset, true_masks_dataset, predictions_dataset = data.preloaded.load.test_images_masks_predictions_tf_datasets()
-    model_evaluation.model_performance_summary(images=images_dataset, true_masks=true_masks_dataset,
-                                               predicted_masks=predictions_dataset, images_display_count=2)
+    model_evaluation.model_performance_summary(images=images_dataset,
+                                               blue_masks=true_masks_dataset, red_masks=predictions_dataset,
+                                               blue_mask_legend="true segmentation",
+                                               red_mask_legend="model segmentation", images_display_count=5)
 
 
 # -------- Prepare dataset --------
