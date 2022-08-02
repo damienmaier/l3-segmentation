@@ -37,8 +37,8 @@ def dice_coefficients_between_masks_iterables(masks1, masks2):
     return coefficients_float
 
 
-def model_performance_summary(images, true_masks, predicted_masks):
-    for image, true_mask, predicted_mask in random.sample(list(zip(images, true_masks, predicted_masks)), 2):
+def model_performance_summary(images, true_masks, predicted_masks, images_display_count: int):
+    for image, true_mask, predicted_mask in random.sample(list(zip(images, true_masks, predicted_masks)), images_display_count):
         utils.display_image.display_ct_scan_image(image)
         utils.display_image.display_ct_scan_image_and_mask(image, predicted_mask)
         utils.display_image.display_ct_scan_image_and_two_masks(image=image, blue_mask=true_mask,

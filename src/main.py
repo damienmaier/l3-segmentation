@@ -5,6 +5,7 @@ import config
 import data.original_dataset
 import data.preloaded.load
 import data.preloaded.save
+import final_model
 import model_evaluation
 import model_exploration
 import model_training
@@ -25,7 +26,7 @@ def explore_models():
 
 
 def train_best_model():
-    model = model_training.train_default_model()
+    model = final_model.train_final_model()
     model.save(MODEL_PATH)
 
 
@@ -39,7 +40,8 @@ def compute_predictions_for_test_set():
 
 def evaluate_performance_of_predictions_on_test_set():
     images_dataset, true_masks_dataset, predictions_dataset = data.preloaded.load.test_images_masks_predictions_tf_datasets()
-    model_evaluation.model_performance_summary(images=images_dataset, true_masks=true_masks_dataset, predicted_masks=predictions_dataset)
+    model_evaluation.model_performance_summary(images=images_dataset, true_masks=true_masks_dataset,
+                                               predicted_masks=predictions_dataset, images_display_count=2)
 
 
 # -------- Prepare dataset --------
