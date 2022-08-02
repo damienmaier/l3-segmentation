@@ -1,4 +1,5 @@
 import pathlib
+import shutil
 
 import numpy as np
 import sklearn.model_selection
@@ -21,7 +22,10 @@ def preload_original_dataset(images, masks):
 
 
 def save_test_predictions(predictions):
-    _save_np_array_as_tf_tensors_on_disk(predictions, TEST_SET_PATH / PREDICTIONS_FOLDER_NAME)
+    predictions_directory_path = TEST_SET_PATH / PREDICTIONS_FOLDER_NAME
+    if predictions_directory_path.exists():
+        shutil.rmtree(predictions_directory_path)
+    _save_np_array_as_tf_tensors_on_disk(predictions, predictions_directory_path)
 
 
 def _save_images_and_masks_on_disk(images, masks, directory_path):
