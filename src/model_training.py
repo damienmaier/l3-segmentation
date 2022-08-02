@@ -46,7 +46,7 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
     def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
         predicted_masks = post_processing_model(model_outputs)
         true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
-        return model_evaluation.dice_coefficients_between_multiple_pairs_of_masks(predicted_masks, true_masks_2d)
+        return model_evaluation.dice_coefficients_between_mask_batches(predicted_masks, true_masks_2d)
 
     final_model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
