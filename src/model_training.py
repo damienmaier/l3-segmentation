@@ -39,7 +39,7 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
         min_value=0.00005,
         max_value=0.0005,
         sampling="log",
-        default=1e-4
+        default=2e-4
     )
 
     model.compile(
@@ -76,7 +76,7 @@ def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_
 
 
 def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperParameters):
-    if hp.Boolean("horizontal flip", default=True):
+    if hp.Boolean("horizontal flip", default=False):
         def random_left_right_flip(image, mask):
             seed = tf.random.uniform(shape=(2,), maxval=10000, dtype=tf.int32)
             transformed_image = tf.image.stateless_random_flip_left_right(image, seed)
