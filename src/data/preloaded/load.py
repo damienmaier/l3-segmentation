@@ -5,29 +5,45 @@ import sklearn.model_selection
 import tensorflow as tf
 
 import utils.functional
-from data.preloaded import TRAIN_SET_PATH, TEST_SET_PATH, IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME
+from data.preloaded import TRAIN_SET_PATH, TEST_SET_PATH, IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME, PREDICTIONS_FOLDER_NAME
 
 
 def train_validation_tf_datasets(random_state=None):
-    images_paths_train, images_paths_validation, masks_paths_train, masks_paths_validation =\
+    images_paths_train, images_paths_validation, masks_paths_train, masks_paths_validation = \
         _random_train_validation_split_paths(random_state=random_state)
-    train_dataset = _shuffled_tf_dataset_from_paths(images_paths_train, masks_paths_train)
-    validation_dataset = _shuffled_tf_dataset_from_paths(images_paths_validation, masks_paths_validation)
+    train_dataset = _tf_dataset_from_images_masks_paths(images_paths_train, masks_paths_train, shuffle=True)
+    validation_dataset = _tf_dataset_from_images_masks_paths(images_paths_validation, masks_paths_validation,
+                                                             shuffle=True)
     return train_dataset, validation_dataset
 
 
-def train_tf_dataset():
-    return _shuffled_tf_dataset_from_paths(*_train_set_paths())
+def train_tf_dataset(shuffle: bool):
+    return _tf_dataset_from_images_masks_paths(*_train_set_paths(), shuffle=shuffle)
 
 
-def test_tf_dataset():
-    return _shuffled_tf_dataset_from_paths(*_test_set_paths())
+def test_tf_dataset(shuffle: bool):
+    return _tf_dataset_from_images_masks_paths(*_test_set_paths(), shuffle=shuffle)
 
 
-def _shuffled_tf_dataset_from_paths(images_paths: np.ndarray, masks_paths: np.ndarray) -> tf.data.Dataset:
+def test_images_masks_predictions_tf_datasets():
+    images_paths, masks_paths, predictions_paths = \
+        _get_dataset_files_paths(TEST_SET_PATH, [IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME, PREDICTIONS_FOLDER_NAME])
+    images_dataset = _tf_dataset_from_paths(images_paths)
+    masks_dataset = _tf_dataset_from_paths(masks_paths)
+    predictions_dataset = _tf_dataset_from_paths(predictions_paths)
+    return images_dataset, masks_dataset, predictions_dataset
+
+
+def _tf_dataset_from_paths(paths: list[str]):
+    return tf.data.Dataset.from_tensor_slices(paths).map(_load_tf_tensor_from_file)
+
+
+def _tf_dataset_from_images_masks_paths(images_paths: np.ndarray, masks_paths: np.ndarray,
+                                        shuffle: bool) -> tf.data.Dataset:
     paths_dataset = tf.data.Dataset.from_tensor_slices((images_paths, masks_paths))
-    shuffled_paths_dataset = paths_dataset.shuffle(buffer_size=paths_dataset.cardinality())
-    dataset = shuffled_paths_dataset.map(utils.functional.function_on_pair(_load_tf_tensor_from_file))
+    if shuffle:
+        paths_dataset = paths_dataset.shuffle(buffer_size=paths_dataset.cardinality())
+    dataset = paths_dataset.map(utils.functional.function_on_pair(_load_tf_tensor_from_file))
     return dataset
 
 

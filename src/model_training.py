@@ -7,19 +7,25 @@ import tensorflow as tf
 
 import architectures
 import config
-import custom_layers
-import model_evaluation
+import custom_keras_objects
 import utils.functional
 
 
 def build_model(hp: keras_tuner.HyperParameters):
     architecture_name = hp.Choice("architecture", ["deeplabv3"], default="deeplabv3")
     base_model = architectures.architecture_builders[architecture_name]()
-    return base_model
+
+    final_model = keras.Sequential()
+    final_model.add(keras.Input(shape=(512, 512, 1)))
+    if hp.Fixed("clip preprocessing", value=True):
+        final_model.add(custom_keras_objects.ClipLayer())
+    final_model.add(base_model)
+
+    return final_model
 
 
-def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
-                train_dataset: tf.data.Dataset, validation_dataset: tf.data.Dataset,
+def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
+                train_dataset: tf.data.Dataset, validation_dataset: tf.data.Dataset = None,
                 *args, **kwargs):
     train_dataset = _prepare_dataset_for_training(train_dataset, batch_size=config.TRAINING_BATCH_SIZE,
                                                   is_validation_dataset=False, hp=hp)
@@ -28,37 +34,26 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
         validation_dataset = _prepare_dataset_for_training(validation_dataset, batch_size=config.TRAINING_BATCH_SIZE,
                                                            is_validation_dataset=True, hp=hp)
 
-    final_model = keras.Sequential()
-    final_model.add(keras.Input(shape=(512, 512, 1)))
-    if hp.Fixed("clip preprocessing", value=True):
-        final_model.add(custom_layers.ClipLayer())
-    final_model.add(base_model)
-
     learning_rate = hp.Float(
         "learning_rate",
         min_value=0.00005,
         max_value=0.0005,
         sampling="log",
-        default=1e-4
+        default=2e-4
     )
 
-    def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
-        predicted_masks = post_processing_model(model_outputs)
-        true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
-        return model_evaluation.dice_coefficients_between_multiple_pairs_of_masks(predicted_masks, true_masks_2d)
-
-    final_model.compile(
+    model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),
         loss="binary_crossentropy",
-        metrics=dice,
+        metrics=custom_keras_objects.dice,
         # avoid tf complaining from the fact that we give pixel weights without having a weighted metric
         weighted_metrics=[]
     )
 
-    history = final_model.fit(
+    history = model.fit(
         x=train_dataset,
         validation_data=validation_dataset,
-        epochs=8,
+        epochs=100,
         *args, **kwargs
     )
 
@@ -81,7 +76,7 @@ def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_
 
 
 def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperParameters):
-    if hp.Boolean("horizontal flip", default=True):
+    if hp.Boolean("horizontal flip", default=False):
         def random_left_right_flip(image, mask):
             seed = tf.random.uniform(shape=(2,), maxval=10000, dtype=tf.int32)
             transformed_image = tf.image.stateless_random_flip_left_right(image, seed)
@@ -90,12 +85,15 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
 
         dataset = dataset.map(random_left_right_flip)
 
-    def gaussian_noise(image, mask):
-        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=40, default=5, sampling="log")
-        gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
-        return gaussian_noise_layer(image, training=True), mask
+    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=40, default=0,
+                                                 sampling="log")
+    if gaussian_noise_standard_deviation != 0:
+        def gaussian_noise(image, mask):
+            gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
+            return gaussian_noise_layer(image, training=True), mask
 
-    dataset = dataset.map(gaussian_noise)
+        dataset = dataset.map(gaussian_noise)
+
     return dataset
 
 
@@ -113,7 +111,4 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
     return image, mask, pixel_weights
 
 
-post_processing_model = keras.Sequential()
-post_processing_model.add(keras.Input(shape=(512, 512, 1)))
-post_processing_model.add(custom_layers.RoundLayer())
-post_processing_model.add(keras.layers.Reshape(target_shape=(512, 512)))
+

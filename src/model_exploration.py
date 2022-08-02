@@ -3,7 +3,7 @@ import keras.callbacks
 import keras_tuner
 import keras.backend
 
-import custom_layers
+import custom_keras_objects
 import data.preloaded.load
 import model_training
 import rootdir
@@ -20,14 +20,6 @@ def explore_hyper_parameters():
     )
 
     tuner.search(callbacks=[keras.callbacks.TensorBoard(rootdir.PROJECT_ROOT_PATH / "model tuning" / "tensorboard")])
-
-
-def train_default_model():
-    hyper_model = MyHyperModel()
-    hp = keras_tuner.HyperParameters()
-    model = hyper_model.build(hp)
-    model.summary()
-    hyper_model.fit(hp, model)
 
 
 class MyHyperModel(keras_tuner.HyperModel):

@@ -1,11 +1,14 @@
 import numpy as np
 from tensorflow import keras
 
+import config
 import data.original_dataset
 import data.preloaded.load
 import data.preloaded.save
+import final_model
 import model_evaluation
 import model_exploration
+import model_training
 import predict
 import rootdir
 
@@ -22,21 +25,23 @@ def explore_models():
     model_exploration.explore_hyper_parameters()
 
 
+def train_best_model():
+    model = final_model.train_final_model()
+    model.save(MODEL_PATH)
+
+
 def compute_predictions_for_test_set():
-    if TEST_SET_PREDICTIONS_PATH.exists():
-        print("Error, the predictions have already been computed")
-    else:
-        images_test, _ = data.preloaded.load._test_set_paths()
-        model = keras.models.load_model(MODEL_PATH)
-        predicted_masks = predict.predict(images=images_test, model=model)
-        array_to_save = np.array(predicted_masks)
-        np.save(TEST_SET_PREDICTIONS_PATH, array_to_save)
+    test_dataset = data.preloaded.load.test_tf_dataset(shuffle=False)
+    batched_test_dataset = test_dataset.batch(config.PREDICTION_BATCH_SIZE)
+    model = keras.models.load_model(MODEL_PATH)
+    predicted_masks = model.predict(batched_test_dataset)
+    data.preloaded.save.save_test_predictions(predicted_masks)
 
 
 def evaluate_performance_of_predictions_on_test_set():
-    images, true_masks = data.preloaded.load._test_set_paths()
-    predicted_masks = np.load(TEST_SET_PREDICTIONS_PATH)
-    model_evaluation.model_performance_summary(images=images, true_masks=true_masks, predicted_masks=predicted_masks)
+    images_dataset, true_masks_dataset, predictions_dataset = data.preloaded.load.test_images_masks_predictions_tf_datasets()
+    model_evaluation.model_performance_summary(images=images_dataset, true_masks=true_masks_dataset,
+                                               predicted_masks=predictions_dataset, images_display_count=2)
 
 
 # -------- Prepare dataset --------
@@ -44,6 +49,9 @@ def evaluate_performance_of_predictions_on_test_set():
 
 # -------- Tune model --------
 explore_models()
+
+# -------- Train chosen model on train set --------
+# train_best_model()
 
 # -------- Compute predictions on test set --------
 # compute_predictions_for_test_set()
