@@ -40,5 +40,5 @@ class MyHyperModel(keras_tuner.HyperModel):
         train_dataset, validation_dataset = data.preloaded.load.train_validation_tf_datasets(
             random_state=train_validation_split_random_state)
         return model_training.train_model(
-            hp=hp, base_model=model, train_dataset=train_dataset, validation_dataset=validation_dataset,
+            hp=hp, model=model, train_dataset=train_dataset, validation_dataset=validation_dataset,
             *args, **kwargs)
