@@ -58,7 +58,7 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
     history = final_model.fit(
         x=train_dataset,
         validation_data=validation_dataset,
-        epochs=4,
+        epochs=8,
         *args, **kwargs
     )
 
