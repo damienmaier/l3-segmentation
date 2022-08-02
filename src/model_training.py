@@ -30,14 +30,14 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
 
     final_model = keras.Sequential()
     final_model.add(keras.Input(shape=(512, 512, 1)))
-    if hp.Boolean("clip preprocessing", default=True):
+    if hp.Fixed("clip preprocessing", value=True):
         final_model.add(custom_layers.ClipLayer())
     final_model.add(base_model)
 
     learning_rate = hp.Float(
         "learning_rate",
-        min_value=1e-5,
-        max_value=1e-3,
+        min_value=0.00005,
+        max_value=0.0005,
         sampling="log",
         default=1e-4
     )
@@ -73,7 +73,7 @@ def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_
     if not is_validation_dataset:
         dataset = _perform_data_augmentation(dataset, hp)
 
-    if hp.Boolean("weighted loss", default=False):
+    if hp.Fixed("weighted loss", value=False):
         dataset = dataset.map(_add_pixel_weights)
 
     dataset = dataset.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
@@ -91,7 +91,7 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
         dataset = dataset.map(random_left_right_flip)
 
     def gaussian_noise(image, mask):
-        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=30, default=5)
+        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=40, default=5, sampling="log")
         gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
         return gaussian_noise_layer(image, training=True), mask
 
