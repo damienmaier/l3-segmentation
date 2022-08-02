@@ -52,7 +52,7 @@ def evaluate_performance_of_predictions_on_test_set():
 # train_best_model()
 
 # -------- Compute predictions on test set --------
-compute_predictions_for_test_set()
+# compute_predictions_for_test_set()
 
 # -------- Visualize performance --------
-evaluate_performance_of_predictions_on_test_set()
+# evaluate_performance_of_predictions_on_test_set()
