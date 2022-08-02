@@ -22,14 +22,6 @@ def explore_hyper_parameters():
     tuner.search(callbacks=[keras.callbacks.TensorBoard(rootdir.PROJECT_ROOT_PATH / "model tuning" / "tensorboard")])
 
 
-def train_default_model():
-    hyper_model = MyHyperModel()
-    hp = keras_tuner.HyperParameters()
-    model = hyper_model.build(hp)
-    model.summary()
-    hyper_model.fit(hp, model)
-
-
 class MyHyperModel(keras_tuner.HyperModel):
     def build(self, hp: keras_tuner.HyperParameters):
         keras.backend.clear_session()

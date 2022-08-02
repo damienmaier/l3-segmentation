@@ -8,6 +8,7 @@ import tensorflow as tf
 import architectures
 import config
 import custom_layers
+import data.preloaded.load
 import model_evaluation
 import utils.functional
 
@@ -19,7 +20,7 @@ def build_model(hp: keras_tuner.HyperParameters):
 
 
 def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
-                train_dataset: tf.data.Dataset, validation_dataset: tf.data.Dataset,
+                train_dataset: tf.data.Dataset, validation_dataset: tf.data.Dataset = None,
                 *args, **kwargs):
     train_dataset = _prepare_dataset_for_training(train_dataset, batch_size=config.TRAINING_BATCH_SIZE,
                                                   is_validation_dataset=False, hp=hp)
@@ -65,6 +66,19 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
     return history
 
 
+def train_default_model():
+    hp = keras_tuner.HyperParameters()
+    model = build_model(hp)
+    train_dataset = data.preloaded.load.train_tf_dataset(shuffle=True)
+    train_model(hp, base_model=model, train_dataset=train_dataset)
+    final_model = keras.Sequential()
+    final_model.add(keras.Input(shape=(512, 512)))
+    final_model.add(keras.layers.Reshape(target_shape=(512, 512, 1)))
+    final_model.add(model)
+    final_model.add(post_processing_model)
+    return final_model
+
+
 def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_validation_dataset: bool,
                                   hp: keras_tuner.HyperParameters) -> tf.data.Dataset:
     add_color_axis = functools.partial(tf.reshape, shape=(512, 512, 1))
@@ -91,7 +105,8 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
         dataset = dataset.map(random_left_right_flip)
 
     def gaussian_noise(image, mask):
-        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=40, default=5, sampling="log")
+        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=40, default=10,
+                                                     sampling="log")
         gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
         return gaussian_noise_layer(image, training=True), mask
 
