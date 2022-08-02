@@ -53,12 +53,10 @@ def evaluate_performance_of_predictions_on_test_set():
 # explore_models()
 
 # -------- Train chosen model on train set --------
-# train_best_model()
+train_best_model()
 
 # -------- Compute predictions on test set --------
 # compute_predictions_for_test_set()
 
 # -------- Visualize performance --------
 # evaluate_performance_of_predictions_on_test_set()
-
-model_exploration.train_default_model()
