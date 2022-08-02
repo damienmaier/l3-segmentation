@@ -2,7 +2,6 @@ import keras.layers
 import keras.utils
 import tensorflow as tf
 
-import final_model
 import model_evaluation
 
 
@@ -35,6 +34,7 @@ class GrayscaleToRGBLayer(keras.layers.Layer):
 
 @tf.keras.utils.register_keras_serializable()
 def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
+    import final_model
     predicted_masks = final_model.post_processing_model(model_outputs)
     true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
     return model_evaluation.dice_coefficients_between_mask_batches(predicted_masks, true_masks_2d)
