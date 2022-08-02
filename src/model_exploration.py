@@ -11,11 +11,10 @@ import gc
 
 
 def explore_hyper_parameters():
-    tuner = keras_tuner.Hyperband(
+    tuner = keras_tuner.RandomSearch(
         MyHyperModel(),
         objective=keras_tuner.Objective("val_dice", direction="max"),
-        max_epochs=10,
-        hyperband_iterations=1,
+        max_trials=10000,
         directory=rootdir.PROJECT_ROOT_PATH / "model tuning",
         project_name="test"
     )

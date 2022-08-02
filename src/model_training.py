@@ -13,7 +13,7 @@ import utils.functional
 
 
 def build_model(hp: keras_tuner.HyperParameters):
-    architecture_name = hp.Choice("architecture", ["unet", "deeplabv3"], default="deeplabv3")
+    architecture_name = hp.Choice("architecture", ["deeplabv3"], default="deeplabv3")
     base_model = architectures.architecture_builders[architecture_name]()
     return base_model
 
@@ -37,7 +37,7 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
     learning_rate = hp.Float(
         "learning_rate",
         min_value=1e-5,
-        max_value=1e-2,
+        max_value=1e-3,
         sampling="log",
         default=1e-4
     )
@@ -58,6 +58,7 @@ def train_model(hp: keras_tuner.HyperParameters, base_model: keras.Model,
     history = final_model.fit(
         x=train_dataset,
         validation_data=validation_dataset,
+        epochs=4,
         *args, **kwargs
     )
 
@@ -90,7 +91,7 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
         dataset = dataset.map(random_left_right_flip)
 
     def gaussian_noise(image, mask):
-        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=10, default=5)
+        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=30, default=5)
         gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
         return gaussian_noise_layer(image, training=True), mask
 
