@@ -4,7 +4,8 @@ import numpy as np
 import sklearn.model_selection
 import tensorflow as tf
 
-from data.preloaded import PRELOADED_DATASET_PATH, TRAIN_SET_PATH, TEST_SET_PATH, IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME
+from data.preloaded import PRELOADED_DATASET_PATH, TRAIN_SET_PATH, TEST_SET_PATH, IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME, \
+    PREDICTIONS_FOLDER_NAME
 
 
 def preload_original_dataset(images, masks):
@@ -17,6 +18,10 @@ def preload_original_dataset(images, masks):
 
         _save_images_and_masks_on_disk(images_train, masks_train, TRAIN_SET_PATH)
         _save_images_and_masks_on_disk(images_test, masks_test, TEST_SET_PATH)
+
+
+def save_test_predictions(predictions):
+    _save_np_array_as_tf_tensors_on_disk(predictions, TEST_SET_PATH / PREDICTIONS_FOLDER_NAME)
 
 
 def _save_images_and_masks_on_disk(images, masks, directory_path):
