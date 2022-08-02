@@ -91,7 +91,7 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
         dataset = dataset.map(random_left_right_flip)
 
     def gaussian_noise(image, mask):
-        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=30, default=5)
+        gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=30, default=5, sampling="log")
         gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
         return gaussian_noise_layer(image, training=True), mask
 
