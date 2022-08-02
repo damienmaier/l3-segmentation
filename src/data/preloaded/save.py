@@ -37,6 +37,6 @@ def _save_np_array_as_tf_tensors_on_disk(array: np.ndarray, directory_path: path
     for file_index, array_2d in enumerate(array):
         tensor = tf.convert_to_tensor(array_2d, dtype=tf.dtypes.float64)
         tf.io.write_file(
-            filename=str(directory_path / str(file_index)),
+            filename=str(directory_path / str(file_index).zfill(5)),
             contents=tf.io.serialize_tensor(tensor)
         )
