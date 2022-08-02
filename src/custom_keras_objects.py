@@ -1,6 +1,9 @@
 import keras.layers
-import tensorflow as tf
 import keras.utils
+import tensorflow as tf
+
+import final_model
+import model_evaluation
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -30,13 +33,8 @@ class GrayscaleToRGBLayer(keras.layers.Layer):
         return tf.image.grayscale_to_rgb(inputs)
 
 
-def normalization(train_dataset: tf.data.Dataset):
-    normalization_layer = keras.layers.Normalization(axis=None)
-
-    def get_image_only(image, *_):
-        image.set_shape((None, 512, 512, 1))
-        return image
-
-    images_dataset = train_dataset.map(get_image_only)
-    normalization_layer.adapt(images_dataset)
-    return normalization_layer
+@tf.keras.utils.register_keras_serializable()
+def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor):
+    predicted_masks = final_model.post_processing_model(model_outputs)
+    true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
+    return model_evaluation.dice_coefficients_between_mask_batches(predicted_masks, true_masks_2d)
