@@ -22,11 +22,7 @@ def dice_coefficient_between_two_masks(mask1: tf.Tensor, mask2: tf.Tensor):
 
 
 def dice_coefficients_between_multiple_pairs_of_masks(masks1: tf.Tensor, masks2: tf.Tensor):
-    def dice_coefficient_between_two_stacked_masks(tensor):
-        return dice_coefficient_between_two_masks(tensor[0], tensor[1])
-
-    stacked_masks = tf.stack([masks1, masks2], axis=1)
-    dice_coefficients = tf.vectorized_map(dice_coefficient_between_two_stacked_masks, stacked_masks)
+    dice_coefficients = [dice_coefficient_between_two_masks(mask1, mask2) for mask1, mask2 in zip(masks1, masks2)]
     return dice_coefficients
 
 
@@ -36,7 +32,7 @@ def average_dice_coefficient(masks1: tf.Tensor, masks2: tf.Tensor):
 
 
 def model_performance_summary(images, true_masks, predicted_masks):
-    for image, true_mask, predicted_mask in random.sample(list(zip(images, true_masks, predicted_masks)), 2):
+    for image, true_mask, predicted_mask in random.sample(list(zip(images, true_masks, predicted_masks)), 1):
         utils.display_image.display_ct_scan_image(image)
         utils.display_image.display_ct_scan_image_and_mask(image, predicted_mask)
         utils.display_image.display_ct_scan_image_and_two_masks(image=image, blue_mask=true_mask,
