@@ -2,6 +2,7 @@ import functools
 
 import matplotlib
 import numpy as np
+import skimage.metrics
 from matplotlib import pyplot as plt
 
 import model_evaluation
@@ -28,7 +29,8 @@ def display_ct_scan_image_and_mask(image, mask):
     plt.show()
 
 
-def display_ct_scan_image_and_two_masks(image, blue_mask, red_mask, blue_mask_legend, red_mask_legend):
+def display_ct_scan_image_and_two_masks(image, blue_mask, red_mask, blue_mask_legend, red_mask_legend,
+                                        show_hausdorff_location: bool = True):
     def comparison_mask_value(blue_mask_value, red_mask_value):
         if blue_mask_value == 0 and red_mask_value == 0:
             return 0
@@ -55,6 +57,10 @@ def display_ct_scan_image_and_two_masks(image, blue_mask, red_mask, blue_mask_le
     plt.text(x=20, y=490,
              s=f"Dice coefficient : {dice_coefficient :.2f}\nHausdorff distance : {hausdorff_distance :.1f}",
              backgroundcolor="white")
+    if show_hausdorff_location:
+        hausdorff_point_1, hausdorff_point_2 = skimage.metrics.hausdorff_pair(blue_mask, red_mask)
+        plt.plot([hausdorff_point_1[1], hausdorff_point_2[1]], [hausdorff_point_1[0], hausdorff_point_2[0]],
+                 alpha=1, color="m", linewidth=1)
     plt.axis("off")
     plt.show()
 
@@ -68,5 +74,5 @@ def _plot_ct_scan_image(image):
 
 def _plot_mask(mask):
     mask_as_masked_np_array = np.ma.masked_equal(mask, 0)
-    _plot_image(mask_as_masked_np_array, cmap=MASK_COLOR_MAP, alpha=.2,
+    _plot_image(mask_as_masked_np_array, cmap=MASK_COLOR_MAP, alpha=.3,
                 norm=matplotlib.colors.Normalize(vmin=1, vmax=3))
