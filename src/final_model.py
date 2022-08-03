@@ -1,10 +1,15 @@
 import keras
+import tensorflow as tf
 import keras.layers
 import keras_tuner
 
+import config
 import custom_keras_objects
 import data.preloaded.load
+import rootdir
 from model_training import build_model, train_model
+
+MODEL_PATH = rootdir.PROJECT_ROOT_PATH / "model"
 
 
 def train_final_model():
@@ -19,10 +24,11 @@ def train_final_model():
     final_model.add(model)
     final_model.add(post_processing_model)
     final_model.compile()
-    return final_model
+
+    final_model.save(MODEL_PATH)
 
 
-def build_post_processing_model():
+def _build_post_processing_model():
     post_processing_model_ = keras.Sequential()
     post_processing_model_.add(keras.Input(shape=(512, 512, 1)))
     post_processing_model_.add(custom_keras_objects.RoundLayer())
@@ -30,4 +36,11 @@ def build_post_processing_model():
     return post_processing_model_
 
 
-post_processing_model = build_post_processing_model()
+post_processing_model = _build_post_processing_model()
+
+
+def predict(images: tf.data.Dataset) -> tf.Tensor:
+    batched_images = images.batch(config.PREDICTION_BATCH_SIZE)
+    model = keras.models.load_model(MODEL_PATH)
+    predicted_masks = model.predict(batched_images)
+    return predicted_masks

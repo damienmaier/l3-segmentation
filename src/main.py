@@ -12,7 +12,7 @@ import model_training
 import predict
 import rootdir
 
-MODEL_PATH = rootdir.PROJECT_ROOT_PATH / "model"
+
 TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted masks.npy"
 
 
@@ -26,15 +26,12 @@ def explore_models():
 
 
 def train_best_model():
-    model = final_model.train_final_model()
-    model.save(MODEL_PATH)
+    final_model.train_final_model()
 
 
 def compute_predictions_for_test_set():
     test_dataset = data.preloaded.load.test_tf_dataset(shuffle=False)
-    batched_test_dataset = test_dataset.batch(config.PREDICTION_BATCH_SIZE)
-    model = keras.models.load_model(MODEL_PATH)
-    predicted_masks = model.predict(batched_test_dataset)
+    predicted_masks = final_model.predict(test_dataset)
     data.preloaded.save.save_test_predictions(predicted_masks)
 
 
