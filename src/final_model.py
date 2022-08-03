@@ -1,4 +1,6 @@
 import keras
+import numpy as np
+import skimage
 import tensorflow as tf
 import keras.layers
 import keras_tuner
@@ -7,6 +9,7 @@ import config
 import custom_keras_objects
 import data.preloaded.load
 import rootdir
+import utils.mask_processing
 from model_training import build_model, train_model
 
 MODEL_PATH = rootdir.PROJECT_ROOT_PATH / "model"
@@ -39,8 +42,13 @@ def _build_post_processing_model():
 post_processing_model = _build_post_processing_model()
 
 
-def predict(images: tf.data.Dataset) -> tf.Tensor:
+def predict(images: tf.data.Dataset) -> np.ndarray:
     batched_images = images.batch(config.PREDICTION_BATCH_SIZE)
     model = keras.models.load_model(MODEL_PATH)
     predicted_masks = model.predict(batched_images)
-    return predicted_masks
+
+    predicted_masks_np = np.array(predicted_masks)
+
+    post_processed_predicted_masks = np.array(list(map(utils.mask_processing.remove_isolated_areas, predicted_masks_np)))
+
+    return post_processed_predicted_masks
