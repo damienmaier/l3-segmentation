@@ -12,7 +12,6 @@ import model_training
 import predict
 import rootdir
 
-
 TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted masks.npy"
 
 
@@ -37,10 +36,12 @@ def compute_predictions_for_test_set():
 
 def evaluate_performance_of_predictions_on_test_set():
     images_dataset, true_masks_dataset, predictions_dataset = data.preloaded.load.test_images_masks_predictions_tf_datasets()
-    model_evaluation.model_performance_summary(images=images_dataset,
-                                               blue_masks=true_masks_dataset, red_masks=predictions_dataset,
-                                               blue_mask_legend="true segmentation",
-                                               red_mask_legend="model segmentation", images_display_count=5)
+    model_evaluation.model_performance_summary(
+        images=images_dataset,
+        blue_masks=true_masks_dataset, red_masks=predictions_dataset,
+        blue_mask_legend="true segmentation", red_mask_legend="model segmentation",
+        images_display_count=10, display_box_plots=True
+    )
 
 
 # -------- Prepare dataset --------
