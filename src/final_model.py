@@ -49,6 +49,20 @@ def predict(images: tf.data.Dataset) -> np.ndarray:
 
     predicted_masks_np = np.array(predicted_masks)
 
-    post_processed_predicted_masks = np.array(list(map(utils.mask_processing.remove_isolated_areas, predicted_masks_np)))
+    post_processed_predicted_masks = np.array(list(map(final_post_processing, predicted_masks_np)))
 
     return post_processed_predicted_masks
+
+
+# those values have been empirically found to give good results
+MAX_DISTANCE_BETWEEN_MASK_AREAS = 10
+MIN_RATIO_BETWEEN_MAIN_MASK_COMPONENTS = .1
+MAXIMUM_SIZE_REMOVE_SMALL_AREAS = 50
+
+
+def final_post_processing(mask: np.ndarray) -> np.ndarray:
+    mask = utils.mask_processing.remove_isolated_areas(mask,
+                                                       min_ratio=MIN_RATIO_BETWEEN_MAIN_MASK_COMPONENTS,
+                                                       max_distance=MAX_DISTANCE_BETWEEN_MASK_AREAS)
+    mask = utils.mask_processing.remove_small_areas(mask, MAXIMUM_SIZE_REMOVE_SMALL_AREAS)
+    return mask
