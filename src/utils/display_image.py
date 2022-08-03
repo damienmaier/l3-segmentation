@@ -53,7 +53,7 @@ def display_ct_scan_image_and_two_masks(image, blue_mask, red_mask, blue_mask_le
     dice_coefficient = model_evaluation.dice_coefficient_between_two_masks(blue_mask, red_mask)
     hausdorff_distance = model_evaluation.hausdorff_distance_between_two_masks(blue_mask, red_mask)
     plt.text(x=20, y=490,
-             s=f"Dice coefficient : {dice_coefficient :.3f}\nHausdorff distance : {hausdorff_distance :.3f}",
+             s=f"Dice coefficient : {dice_coefficient :.2f}\nHausdorff distance : {hausdorff_distance :.1f}",
              backgroundcolor="white")
     plt.axis("off")
     plt.show()
