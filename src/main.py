@@ -38,10 +38,10 @@ def evaluate_performance_of_predictions_on_test_set():
 # create_preloaded_dataset_from_original_dataset()
 
 # -------- Tune model --------
-# explore_models()
+explore_models()
 
 # -------- Train chosen model on train set --------
-train_best_model()
+# train_best_model()
 
 # -------- Compute predictions on test set --------
 # compute_predictions_for_test_set()
