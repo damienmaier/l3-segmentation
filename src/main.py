@@ -4,9 +4,6 @@ import data.preloaded.save
 import final_model
 import model_evaluation
 import model_exploration
-import rootdir
-
-TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted masks.npy"
 
 
 def create_preloaded_dataset_from_original_dataset():
