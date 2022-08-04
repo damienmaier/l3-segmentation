@@ -18,20 +18,17 @@ MASK_COLOR_MAP = matplotlib.colormaps["jet_r"]
 
 def display_ct_scan_image(image):
     _plot_ct_scan_image(image)
-    plt.axis("off")
     _finalize_image()
 
 
 def display_mask(mask):
     _plot_image(mask)
-    plt.axis("off")
     _finalize_image()
 
 
 def display_ct_scan_image_and_mask(image, mask):
     _plot_ct_scan_image(image)
     _plot_mask(mask)
-    plt.axis("off")
     _finalize_image()
 
 
