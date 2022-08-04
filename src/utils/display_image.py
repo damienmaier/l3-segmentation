@@ -7,10 +7,10 @@ import seaborn
 import skimage.metrics
 from matplotlib import pyplot as plt
 
+import config
 import model_evaluation
 import rootdir
 
-SAVE_IMAGES_ON_DISK = True
 IMAGES_FOLDER_PATH = pathlib.Path(rootdir.PROJECT_ROOT_PATH / "images")
 
 MASK_COLOR_MAP = matplotlib.colormaps["jet_r"]
@@ -94,7 +94,7 @@ def _plot_mask(mask):
 def _finalize_image(display_axis=False):
     if not display_axis:
         plt.axis("off")
-    if not SAVE_IMAGES_ON_DISK:
+    if not config.SAVE_IMAGES_ON_DISK:
         plt.show()
     else:
         if not IMAGES_FOLDER_PATH.exists():
