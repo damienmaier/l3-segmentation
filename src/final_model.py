@@ -1,9 +1,8 @@
 import keras
-import numpy as np
-import skimage
-import tensorflow as tf
 import keras.layers
 import keras_tuner
+import numpy as np
+import tensorflow as tf
 
 import config
 import custom_keras_objects

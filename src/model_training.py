@@ -109,6 +109,3 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
     pixel_weights = tf.gather(class_weights, indices=tf.cast(mask, tf.int32))
 
     return image, mask, pixel_weights
-
-
-

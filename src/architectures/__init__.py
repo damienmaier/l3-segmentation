@@ -1,5 +1,5 @@
-import architectures._unet
 import architectures._deep_lab_v3
+import architectures._unet
 
 architecture_builders = {
     "unet": _unet.model_sma_detection,

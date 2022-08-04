@@ -3,7 +3,6 @@ from keras import Model, Input
 from keras.applications.densenet import layers
 from keras.initializers.initializers_v1 import RandomNormal
 from keras.layers import Conv2D, MaxPooling2D, BatchNormalization, UpSampling2D
-import keras.layers
 
 
 def model_sma_detection():

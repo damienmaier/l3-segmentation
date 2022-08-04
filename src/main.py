@@ -1,15 +1,9 @@
-import numpy as np
-from tensorflow import keras
-
-import config
 import data.original_dataset
 import data.preloaded.load
 import data.preloaded.save
 import final_model
 import model_evaluation
 import model_exploration
-import model_training
-import predict
 import rootdir
 
 TEST_SET_PREDICTIONS_PATH = rootdir.PROJECT_ROOT_PATH / "test set predicted masks.npy"
@@ -42,7 +36,6 @@ def evaluate_performance_of_predictions_on_test_set():
         blue_mask_legend="true segmentation", red_mask_legend="model segmentation",
         images_display_count=10, display_box_plots=True
     )
-
 
 # -------- Prepare dataset --------
 # create_preloaded_dataset_from_original_dataset()

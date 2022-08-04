@@ -1,4 +1,3 @@
-import dataclasses
 import pathlib
 
 import numpy as np
@@ -8,7 +7,8 @@ def load_data_from_bm_segmenter_project(project_path: pathlib.Path):
     project_elements = [_ProjectElement(project_path, image_directory_path.name)
                         for image_directory_path in (project_path / "dicoms").iterdir()]
 
-    project_elements_with_correct_shape = [project_element for project_element in project_elements if project_element.has_correct_shape()]
+    project_elements_with_correct_shape = [project_element for project_element in project_elements if
+                                           project_element.has_correct_shape()]
     images = [project_element.image() for project_element in project_elements_with_correct_shape]
     predicted_masks = [project_element.ml_mask() for project_element in project_elements_with_correct_shape]
 

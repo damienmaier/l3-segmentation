@@ -3,13 +3,9 @@ import itertools
 import random
 import statistics
 
-import numpy as np
-import pandas
-import seaborn
 import skimage.draw
 import skimage.metrics
 import tensorflow as tf
-from matplotlib import pyplot as plt
 
 import utils.display_image
 
@@ -105,6 +101,3 @@ def model_performance_summary(images,
 
     print(f"Average dice coefficient : {statistics.mean(dice_values):.4f}")
     print(f"Average hausdorff distance : {statistics.mean(hausdorff_values):.4f}")
-
-
-
