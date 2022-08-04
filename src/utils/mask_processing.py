@@ -46,7 +46,7 @@ def _min_distance_between_two_objects(labeled_image, object1_id, object2_id):
     points_coordinates_object2 = np.transpose(np.nonzero(object2_image))
 
     distances = scipy.spatial.KDTree(points_coordinates_object1).query(points_coordinates_object2, k=1)[0]
-    return math.inf if len(distances) == 0 else min(distances)
+    return min(distances, default=math.inf)
 
 
 def remove_small_areas(mask: np.ndarray, max_pixel_count: int):
