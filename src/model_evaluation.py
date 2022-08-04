@@ -64,8 +64,12 @@ def model_performance_summary(images,
         random.shuffle(images_masks)
     if selection == "hausdorff":
         images_masks.sort(
-            key=lambda triplet: hausdorff_distance_between_two_masks(triplet[1], triplet[2]),
+            key=lambda image_mask: hausdorff_distance_between_two_masks(image_mask[1], image_mask[2]),
             reverse=True
+        )
+    if selection == "dice":
+        images_masks.sort(
+            key=lambda image_mask: dice_coefficient_between_two_masks(image_mask[1], image_mask[2]),
         )
 
     for image, blue_mask, red_mask, alternative_red_mask in images_masks[:images_display_count]:
@@ -96,16 +100,11 @@ def model_performance_summary(images,
     dice_values = list(map(dice_coefficient_between_two_masks, blue_masks, red_masks))
     hausdorff_values = list(map(hausdorff_distance_between_two_masks, blue_masks, red_masks))
     if display_box_plots:
-        _display_metric_box_plot(dice_values, "dice coefficient")
-        _display_metric_box_plot(hausdorff_values, "hausdorff distance")
+        utils.display_image.display_metric_box_plot(dice_values, "dice coefficient")
+        utils.display_image.display_metric_box_plot(hausdorff_values, "hausdorff distance")
 
     print(f"Average dice coefficient : {statistics.mean(dice_values):.4f}")
     print(f"Average hausdorff distance : {statistics.mean(hausdorff_values):.4f}")
 
 
-def _display_metric_box_plot(metric_values, metric_name):
-    seaborn.catplot(
-        data=(pandas.DataFrame({metric_name: metric_values})),
-        y=metric_name,
-        kind="box")
-    plt.show()
+
