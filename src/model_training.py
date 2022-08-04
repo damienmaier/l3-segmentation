@@ -34,12 +34,9 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
         validation_dataset = _prepare_dataset_for_training(validation_dataset, batch_size=config.TRAINING_BATCH_SIZE,
                                                            is_validation_dataset=True, hp=hp)
 
-    learning_rate = hp.Float(
+    learning_rate = hp.Fixed(
         "learning_rate",
-        min_value=0.00005,
-        max_value=0.0005,
-        sampling="log",
-        default=2e-4
+        value=2e-4
     )
 
     model.compile(
@@ -85,7 +82,11 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
 
         dataset = dataset.map(random_left_right_flip)
 
-    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=40, default=0,
+    rotation_factor = hp.Float("rotation", min_value=0, max_value=.2, default=0)
+    if rotation_factor != 0:
+        dataset.map(keras.layers.RandomRotation(factor=rotation_factor))
+
+    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=30, default=0,
                                                  sampling="log")
     if gaussian_noise_standard_deviation != 0:
         def gaussian_noise(image, mask):
@@ -109,6 +110,3 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
     pixel_weights = tf.gather(class_weights, indices=tf.cast(mask, tf.int32))
 
     return image, mask, pixel_weights
-
-
-

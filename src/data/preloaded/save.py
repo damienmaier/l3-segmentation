@@ -11,14 +11,14 @@ from data.preloaded import PRELOADED_DATASET_PATH, TRAIN_SET_PATH, TEST_SET_PATH
 
 def preload_original_dataset(images, masks):
     if PRELOADED_DATASET_PATH.exists():
-        print("Error : a preloaded dataset already exists")
-    else:
-        PRELOADED_DATASET_PATH.mkdir()
-        images_train, images_test, masks_train, masks_test = \
-            sklearn.model_selection.train_test_split(images, masks, random_state=42)
+        shutil.rmtree(PRELOADED_DATASET_PATH)
 
-        _save_images_and_masks_on_disk(images_train, masks_train, TRAIN_SET_PATH)
-        _save_images_and_masks_on_disk(images_test, masks_test, TEST_SET_PATH)
+    PRELOADED_DATASET_PATH.mkdir()
+    images_train, images_test, masks_train, masks_test = \
+        sklearn.model_selection.train_test_split(images, masks, random_state=42)
+
+    _save_images_and_masks_on_disk(images_train, masks_train, TRAIN_SET_PATH)
+    _save_images_and_masks_on_disk(images_test, masks_test, TEST_SET_PATH)
 
 
 def save_test_predictions(predictions):

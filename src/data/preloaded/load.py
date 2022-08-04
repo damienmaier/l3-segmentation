@@ -9,8 +9,10 @@ from data.preloaded import TRAIN_SET_PATH, TEST_SET_PATH, IMAGES_FOLDER_NAME, MA
 
 
 def train_validation_tf_datasets(random_state=None):
+    images_paths, masks_paths = _train_set_paths()
     images_paths_train, images_paths_validation, masks_paths_train, masks_paths_validation = \
-        _random_train_validation_split_paths(random_state=random_state)
+        sklearn.model_selection.train_test_split(images_paths, masks_paths, random_state=random_state)
+
     train_dataset = _tf_dataset_from_images_masks_paths(images_paths_train, masks_paths_train, shuffle=True)
     validation_dataset = _tf_dataset_from_images_masks_paths(images_paths_validation, masks_paths_validation,
                                                              shuffle=True)
@@ -53,11 +55,6 @@ def _train_set_paths() -> list[np.ndarray, np.ndarray]:
 
 def _test_set_paths() -> list[np.ndarray, np.ndarray]:
     return _get_dataset_files_paths(TEST_SET_PATH, [IMAGES_FOLDER_NAME, MASKS_FOLDER_NAME])
-
-
-def _random_train_validation_split_paths(random_state=None) -> list[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    images_paths, masks_paths = _train_set_paths()
-    return sklearn.model_selection.train_test_split(images_paths, masks_paths, random_state=random_state)
 
 
 def _load_tf_tensor_from_file(file_path: str) -> tf.Tensor:

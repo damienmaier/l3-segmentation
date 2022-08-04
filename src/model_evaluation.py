@@ -1,11 +1,11 @@
+import functools
+import itertools
 import random
 import statistics
 
-import pandas
-import seaborn
+import skimage.draw
 import skimage.metrics
 import tensorflow as tf
-from matplotlib import pyplot as plt
 
 import utils.display_image
 
@@ -39,30 +39,65 @@ def dice_coefficients_between_mask_batches(mask_batch1: tf.Tensor, mask_batch2: 
 hausdorff_distance_between_two_masks = skimage.metrics.hausdorff_distance
 
 
-def model_performance_summary(images, blue_masks, red_masks, images_display_count: int, blue_mask_legend,
-                              red_mask_legend):
-    for image, blue_mask, red_mask in random.sample(list(zip(images, blue_masks, red_masks)),
-                                                    images_display_count):
-        utils.display_image.display_ct_scan_image(image)
-        utils.display_image.display_ct_scan_image_and_mask(image, red_mask)
-        utils.display_image.display_ct_scan_image_and_two_masks(image=image,
-                                                                blue_mask=blue_mask, red_mask=red_mask,
+def hausdorff_points(mask1, mask2):
+    point1, point2 = skimage.metrics.hausdorff_pair(mask1, mask2)
+    return list(point1), list(point2)
+
+
+def model_performance_summary(images,
+                              blue_masks, red_masks,
+                              blue_mask_legend, red_mask_legend,
+                              images_display_count: int, selection=None,
+                              display_image=False, display_red_mask=False, display_blue_mask=False,
+                              display_comparison=True, display_comparison_with_hausdorff_line=False,
+                              display_box_plots=False,
+                              alternative_red_masks=None):
+    if alternative_red_masks is not None:
+        images_masks = list(zip(images, blue_masks, red_masks, alternative_red_masks))
+    else:
+        images_masks = list(zip(images, blue_masks, red_masks, itertools.repeat(None)))
+    if selection == "random":
+        random.shuffle(images_masks)
+    if selection == "hausdorff":
+        images_masks.sort(
+            key=lambda image_mask: hausdorff_distance_between_two_masks(image_mask[1], image_mask[2]),
+            reverse=True
+        )
+    if selection == "dice":
+        images_masks.sort(
+            key=lambda image_mask: dice_coefficient_between_two_masks(image_mask[1], image_mask[2]),
+        )
+
+    for image, blue_mask, red_mask, alternative_red_mask in images_masks[:images_display_count]:
+        if display_image:
+            utils.display_image.display_ct_scan_image(image)
+        if display_red_mask:
+            utils.display_image.display_ct_scan_image_and_mask(image, red_mask)
+        if display_blue_mask:
+            utils.display_image.display_ct_scan_image_and_mask(image, blue_mask)
+
+        display_ct_scan_image_and_two_masks = functools.partial(utils.display_image.display_ct_scan_image_and_two_masks,
+                                                                image=image,
+                                                                blue_mask=blue_mask,
                                                                 blue_mask_legend=blue_mask_legend,
-                                                                red_mask_legend=red_mask_legend)
+                                                                red_mask_legend=red_mask_legend
+                                                                )
+
+        if display_comparison:
+            display_ct_scan_image_and_two_masks(red_mask=red_mask, show_hausdorff_location=False)
+            if alternative_red_masks is not None:
+                display_ct_scan_image_and_two_masks(red_mask=alternative_red_mask, show_hausdorff_location=False)
+
+        if display_comparison_with_hausdorff_line:
+            display_ct_scan_image_and_two_masks(red_mask=red_mask, show_hausdorff_location=True)
+            if alternative_red_masks is not None:
+                display_ct_scan_image_and_two_masks(red_mask=alternative_red_mask, show_hausdorff_location=True)
 
     dice_values = list(map(dice_coefficient_between_two_masks, blue_masks, red_masks))
     hausdorff_values = list(map(hausdorff_distance_between_two_masks, blue_masks, red_masks))
-
-    _display_metric_box_plot(dice_values, "dice coefficient")
-    _display_metric_box_plot(hausdorff_values, "hausdorff distance")
+    if display_box_plots:
+        utils.display_image.display_metric_box_plot(dice_values, "dice coefficient")
+        utils.display_image.display_metric_box_plot(hausdorff_values, "hausdorff distance")
 
     print(f"Average dice coefficient : {statistics.mean(dice_values):.4f}")
     print(f"Average hausdorff distance : {statistics.mean(hausdorff_values):.4f}")
-
-
-def _display_metric_box_plot(metric_values, metric_name):
-    seaborn.catplot(
-        data=(pandas.DataFrame({metric_name: metric_values})),
-        y=metric_name,
-        kind="box")
-    plt.show()

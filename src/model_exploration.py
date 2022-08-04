@@ -1,13 +1,13 @@
+import gc
+
 import keras
+import keras.backend
 import keras.callbacks
 import keras_tuner
-import keras.backend
 
-import custom_keras_objects
 import data.preloaded.load
 import model_training
 import rootdir
-import gc
 
 
 def explore_hyper_parameters():

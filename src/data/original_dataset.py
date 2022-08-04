@@ -1,5 +1,8 @@
+import functools
+
 import numpy as np
 
+import utils.mask_processing
 from rootdir import PROJECT_ROOT_PATH
 
 ORIGINAL_DATASET_PATH = PROJECT_ROOT_PATH / "original dataset"
@@ -46,6 +49,9 @@ def load_original_dataset_from_disk():
 
     images = [dataset_element.image_data for dataset_element in dataset_elements_with_correct_shape]
     masks = [dataset_element.mask_data for dataset_element in dataset_elements_with_correct_shape]
+
+    clean_function = functools.partial(utils.mask_processing.remove_small_areas, max_pixel_count=4)
+    masks = list(map(clean_function, masks))
 
     return images, masks
 
