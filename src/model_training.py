@@ -8,7 +8,9 @@ import tensorflow as tf
 import architectures
 import config
 import custom_keras_objects
+import utils.display_image
 import utils.functional
+import utils.data_augmentation
 
 
 def build_model(hp: keras_tuner.HyperParameters):
@@ -73,7 +75,7 @@ def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_
 
 
 def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperParameters):
-    if hp.Boolean("horizontal flip", default=False):
+    if hp.Boolean("horizontal flip", default=True):
         def random_left_right_flip(image, mask):
             seed = tf.random.uniform(shape=(2,), maxval=10000, dtype=tf.int32)
             transformed_image = tf.image.stateless_random_flip_left_right(image, seed)
@@ -82,11 +84,11 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
 
         dataset = dataset.map(random_left_right_flip)
 
-    rotation_factor = hp.Float("rotation", min_value=0, max_value=.2, default=0)
-    if rotation_factor != 0:
-        dataset.map(keras.layers.RandomRotation(factor=rotation_factor))
+    rotation_angle = hp.Float("rotation", min_value=0, max_value=2, default=1)
+    if rotation_angle != 0:
+        dataset = dataset.map(utils.data_augmentation.generate_random_rotation_function(max_angle=rotation_angle))
 
-    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=30, default=0,
+    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=30, default=30,
                                                  sampling="log")
     if gaussian_noise_standard_deviation != 0:
         def gaussian_noise(image, mask):
@@ -110,3 +112,10 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
     pixel_weights = tf.gather(class_weights, indices=tf.cast(mask, tf.int32))
 
     return image, mask, pixel_weights
+
+
+def visualize_prepared_dataset(*args, **kwargs):
+    dataset = _prepare_dataset_for_training(*args, **kwargs)
+    images_batch, masks_batch = next(iter(dataset))
+    for image, mask in zip(images_batch, masks_batch):
+        utils.display_image.display_ct_scan_image_and_mask(tf.squeeze(image), tf.squeeze(mask))
