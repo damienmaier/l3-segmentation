@@ -88,7 +88,7 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
     if rotation_angle != 0:
         dataset = dataset.map(utils.data_augmentation.generate_random_rotation_function(max_angle=rotation_angle))
 
-    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=50, default=30,)
+    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=0, max_value=30, default=30,)
     if gaussian_noise_standard_deviation != 0:
         def gaussian_noise(image, mask):
             gaussian_noise_layer = keras.layers.GaussianNoise(gaussian_noise_standard_deviation)
