@@ -5,7 +5,7 @@
 conda create -n segmenter
 conda activate segmenter
 conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0 python=3.10 scikit-learn=1.1.1 matplotlib=3.5.2 pandas=1.4.3 seaborn=0.11.2
-pip install tensorflow==2.9.1 keras-tuner==1.1.3
+pip install tensorflow==2.9.1 tensorflow-addons==0.17.1 keras-tuner==1.1.3
 ```
 
 ## Config file
