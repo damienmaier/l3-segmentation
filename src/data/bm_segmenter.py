@@ -3,31 +3,32 @@ import pathlib
 import numpy as np
 
 
-def load_data_from_bm_segmenter_project(project_path: pathlib.Path):
-    project_elements = [_ProjectElement(project_path, image_directory_path.name)
-                        for image_directory_path in (project_path / "dicoms").iterdir()]
+class ProjectElement:
+    ML_MASK_KEY = "predicted"
+    IMAGE_KEY = "matrix"
 
-    project_elements_with_correct_shape = [project_element for project_element in project_elements if
-                                           project_element.has_correct_shape()]
-    images = [project_element.image() for project_element in project_elements_with_correct_shape]
-    predicted_masks = [project_element.ml_mask() for project_element in project_elements_with_correct_shape]
+    @staticmethod
+    def get_elements_of_project(project_path: pathlib.Path) -> list["ProjectElement"]:
+        project_elements = [ProjectElement(project_path, image_directory_path.name)
+                            for image_directory_path in (project_path / "dicoms").iterdir()]
+        return project_elements
 
-    return np.array(images), np.array(predicted_masks)
-
-
-class _ProjectElement:
     def __init__(self, project_path: pathlib.Path, image_name: str) -> None:
-        mask_file_path = project_path / "masks" / "sma" / (image_name + ".npz")
-        self.mask_file_data = np.load(mask_file_path, allow_pickle=True)
+        self.mask_file_path = project_path / "masks" / "sma" / (image_name + ".npz")
+        self.mask_file_data = np.load(self.mask_file_path, allow_pickle=True)
 
-        image_file_path = project_path / "dicoms" / image_name / "0.npz"
-        self.image_file_data = np.load(image_file_path, allow_pickle=True)
+        self.image_file_path = project_path / "dicoms" / image_name / "0.npz"
+        self.image_file_data = np.load(self.image_file_path, allow_pickle=True)
 
-    def ml_mask(self):
-        return self.mask_file_data["predicted"]
+    def get_machine_learning_mask(self) -> np.ndarray:
+        return self.mask_file_data[self.ML_MASK_KEY]
 
-    def image(self):
-        return self.image_file_data["matrix"]
+    def set_machine_learning_mask(self, mask: np.ndarray):
+        self.mask_file_data[self.ML_MASK_KEY] = mask
+        self._update_mask_file()
 
-    def has_correct_shape(self):
-        return self.image().shape == (512, 512)
+    def get_image(self) -> np.ndarray:
+        return self.image_file_data[self.IMAGE_KEY]
+
+    def _update_mask_file(self):
+        np.savez(self.mask_file_path, self.mask_file_data)
