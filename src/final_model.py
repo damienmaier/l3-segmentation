@@ -2,6 +2,8 @@ import keras
 import keras.layers
 import keras_tuner
 import numpy as np
+import scipy.signal
+import skimage.transform
 import tensorflow as tf
 
 import config
@@ -51,6 +53,28 @@ def predict(images: tf.data.Dataset) -> np.ndarray:
     post_processed_predicted_masks = np.array(list(map(final_post_processing, predicted_masks_np)))
 
     return post_processed_predicted_masks
+
+
+def predict_from_images_iterable(images) -> list[np.ndarray]:
+    def resize_image(image):
+        if image.shape == (512, 512):
+            return image
+        else:
+            return skimage.transform.resize(image, output_shape=(512, 512), preserve_range=True)
+
+    images_with_correct_shape = np.array(list(map(resize_image, images)))
+
+    masks = predict(tf.data.Dataset.from_tensor_slices(images_with_correct_shape))
+
+    def resize_mask(mask, image):
+        if mask.shape == image.shape:
+            return mask
+        else:
+            resized_mask = skimage.transform.resize(mask, output_shape=image.shape, preserve_range=True).round()
+            smoothed_resized_mask = scipy.signal.medfilt(resized_mask, 3)
+            return smoothed_resized_mask
+
+    return list(map(resize_mask, masks, images))
 
 
 # those values have been empirically found to give good results
