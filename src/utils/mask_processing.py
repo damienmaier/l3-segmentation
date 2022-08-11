@@ -10,6 +10,9 @@ import skimage.morphology
 def remove_isolated_areas(mask, min_ratio, max_distance):
     labeled_mask, objects_count = skimage.measure.label(mask, return_num=True)
 
+    if objects_count == 0:
+        return mask
+
     pixels_counter = collections.Counter(labeled_mask.flat)
     largest_objects = pixels_counter.most_common()
     # the most common value is 0, so the id of the largest object is the second most common value
