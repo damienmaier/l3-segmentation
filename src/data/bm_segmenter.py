@@ -29,8 +29,7 @@ class ProjectElement:
 
     def get_image(self) -> np.ndarray:
         image = self._image_file_data[self.IMAGE_KEY]
-        image_ugly_fix = np.clip(image, a_min=-1024, a_max=None)
-        return image_ugly_fix
+        return image
 
     def _update_mask_file(self):
         np.savez(self._mask_file_path, **self._mask_file_data)
