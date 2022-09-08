@@ -100,6 +100,7 @@ def _finalize_image(display_axis=False):
         last_image_stem = max((file.stem for file in IMAGES_FOLDER_PATH.iterdir()), default=0)
         image_name = str(int(last_image_stem) + 1).zfill(4) + ".png"
         plt.savefig(IMAGES_FOLDER_PATH / image_name)
+        plt.clf()
 
 
 def display_metric_box_plot(metric_values, metric_name):
