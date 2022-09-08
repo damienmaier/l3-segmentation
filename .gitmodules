@@ -1,3 +1,0 @@
-[submodule "src/data/bmsegmenter"]
-	path = src/data/bmsegmenter
-	url = git@github.com:damienmaier/bm-segmenter-project-edition.git
