@@ -15,7 +15,7 @@ Here is the same image with the muscular area highlighted in red :
 The model is given as input an L3 CT scan slice. The model must generate the mask corresponding to the muscular area, i.e. an array with the same dimensions as the input image where each element contains either a 1 if the corresponding pixel image is part of the muscle area, or a 0 otherwise.
 
 ## Dataset
-The dataset contains 1'055 images wit a corresponding correct mask. It is split in a training set (80% of the data) and a test set (20% of the data).
+The dataset contained 1'055 images wit a corresponding correct mask. It was split in a training set (80% of the data) and a test set (20% of the data).
 
 ## Model architecture and hyperparameter exploration
 ### Methodology
