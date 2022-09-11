@@ -1,3 +1,45 @@
+"""
+Code for reading the original dataset.
+
+The original dataset is expected to have the following location and structure :
+<root directory of the project>
+    original dataset
+        <subdir1>
+            images
+                <file1>
+                <file2>
+                ...
+            masks
+                <file1>
+                <file2>
+                ...
+        <subdir2>
+            images
+                <file3>
+                <file4>
+                ...
+            masks
+                <file3>
+                <file4>
+                ...
+        ...
+
+Where the directories `original dataset` `images` and `masks` have these exact names.
+
+The names of <subdir1>, <subdir2>, etc. is not significant, and it is not an information used by the code.
+It does not make a difference which data is stored in which subdirectory.
+You can store all data in a single subdirectory or split it in several subdirectories, this will give the exact same result.
+
+<file1>, <file2>, etc. must be comma separated CSV files without headers. For each CSV file in the `images` directory there
+must exist a CSV file with an identical name in the corresponding `masks` directory. Apart from that, the names of these files
+are not significant.
+
+Each image CSV file contains the values of the pixels of an image (a pixel only contains a single value).
+The corresponding mask CSV file contains the mask for the image, i.e. a matrix where each element is either 0 or 1.
+
+Images and masks must have a resolution of exactly 512x512. Images and masks with a different resolution are ignored.
+"""
+
 import functools
 
 import numpy as np
@@ -10,31 +52,13 @@ IMAGES_FOLDER_NAME = "images"
 MASKS_FOLDER_NAME = "masks"
 
 
-def load_original_dataset_from_disk():
+def load_original_dataset_from_disk() -> tuple[list[np.ndarray], list[np.ndarray]]:
     """
-    The dataset directory is expected to have the following structure:
-        dataset directory
-            subdir1
-                images
-                    file1
+    Reads the original dataset from the disk. The expected format and location is described in the module documentation
 
-                    file2
-                masks
-                    file1
-
-                    file2
-            subdir2
-                images
-                    file3
-
-                    file4
-                masks
-                    file3
-
-                    file4
-            ...
-    The files must be CSV files containing a matrix of values separated by commas.
-    Matrices must have a 512 x 512 shape. Files containing a matrix with a different shape are ignored.
+    Returns :
+        - A list of images, where each image is a 512x512 numpy array
+        - A list of the corresponding masks, where each mask is a 512x512 numpy array containing only 0s and 1s
     """
     dataset_elements = _original_dataset_elements()
 

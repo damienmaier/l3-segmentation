@@ -1,3 +1,10 @@
+"""
+Functions for generating images of CT scans and masks.
+
+If config.SAVE_IMAGES_ON_DISK is False, the images are displayed in a window.
+If it is True, the images are saved in the directory <project root>/images.
+"""
+
 import pathlib
 
 import matplotlib
@@ -16,24 +23,46 @@ IMAGES_FOLDER_PATH = pathlib.Path(rootdir.PROJECT_ROOT_PATH / "images")
 MASK_COLOR_MAP = matplotlib.colormaps["jet_r"]
 
 
-def display_ct_scan_image(image):
+def display_ct_scan_image(image: np.ndarray):
+    """
+    Generates an image of a CT scan image by clipping pixel HU values to [-200, 200]
+    """
     _plot_ct_scan_image(image)
     _finalize_image()
 
 
-def display_mask(mask):
+def display_mask(mask: np.ndarray):
+    """
+    Generates an image of a mask
+    """
     _plot_image(mask)
     _finalize_image()
 
 
-def display_ct_scan_image_and_mask(image, mask):
+def display_ct_scan_image_and_mask(image: np.ndarray, mask: np.ndarray):
+    """
+    Generates an image of a CT scan image where an area is highlighted with respect to a mask.
+    """
     _plot_ct_scan_image(image)
     _plot_mask(mask)
     _finalize_image()
 
 
-def display_ct_scan_image_and_two_masks(image, blue_mask, red_mask, blue_mask_legend, red_mask_legend,
+def display_ct_scan_image_and_two_masks(image: np.ndarray, blue_mask: np.ndarray, red_mask: np.ndarray,
+                                        blue_mask_legend: str, red_mask_legend: str,
                                         show_hausdorff_location: bool = True):
+    """
+    Generates an image that allows to visualize the differences between two masks for a CT scan image.
+
+    Images areas that are in both masks are highlighted in green. Areas that are only in `blue_mask` are highlighted in
+    blue and areas that are only in `red_mask` are highlighted in red.
+
+    The image includes a legend that names the masks with respect to `blue_mask_legend` and `red_mask_legend`.
+
+    The image also includes the Dice coefficient and the Hausdorff distance between the two masks.
+
+    If `show_hausdorff_location` is True, the image includes a line that shows the location of the Hausdorff distance.
+    """
     def comparison_mask_value(blue_mask_value, red_mask_value):
         if blue_mask_value == 0 and red_mask_value == 0:
             return 0
@@ -103,7 +132,11 @@ def _finalize_image(display_axis=False):
         plt.clf()
 
 
-def display_metric_box_plot(metric_values, metric_name):
+def display_metric_box_plot(metric_values: list[float], metric_name: str):
+    """
+    Generates an image of a box plot for the values listed in `metric_values`. The image includes a legend
+    that uses `metric_name`.
+    """
     seaborn.catplot(
         data=(pandas.DataFrame({metric_name: metric_values})),
         y=metric_name,

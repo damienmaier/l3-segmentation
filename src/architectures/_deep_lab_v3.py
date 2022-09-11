@@ -1,8 +1,18 @@
-# comes from https://keras.io/examples/vision/deeplabv3_plus/
+"""
+Code for building a model with DeepLabV3+ architecture, with the weights of ResNet50 trained for ImageNet.
+"""
+
 import tensorflow as tf
 from keras.applications.densenet import layers
 
 import custom_keras_objects
+
+# This code comes from https://keras.io/examples/vision/deeplabv3_plus/
+
+# At the time of writing this comment (August 2022), the BatchNormalization layer of Tensorflow seems to trigger a
+# bug that prevents the model from working properly. Therefore, the line "x = layers.BatchNormalization()(x)" below
+# had to be commented out. If this bug is resolved in a future version of tensorflow, uncommenting this line could
+# maybe improve the model performance.
 
 
 def deep_lab_v3_plus():

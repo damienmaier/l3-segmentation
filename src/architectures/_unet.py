@@ -1,3 +1,6 @@
+"""
+Code for building a model with a Unet architecture
+"""
 import numpy as np
 from keras import Model, Input
 from keras.applications.densenet import layers

@@ -1,6 +1,19 @@
+"""
+Provides functions to train the model.
+
+The `hp` argument of the functions allows to declare and to configure hyperparameters.
+When the model hyperparameters exploration is done by the `model_exploration` module, hyperparameter values
+are chosen according to the `min_value` and `max_value` of each hyperparameter. When the final model is trained,
+the values of the hyperparameters are determined by the `default` value of the hyperparameters.
+
+You can therefore control the hyperparameter ranges for the model exploration and the hyperparameter final values
+for the final model training by modifying `min_value`, `max_value` and `default`.
+"""
+
 import functools
 
 import keras
+import keras.callbacks
 import keras.layers
 import keras_tuner
 import tensorflow as tf
@@ -8,13 +21,21 @@ import tensorflow as tf
 import architectures
 import config
 import custom_keras_objects
+import utils.data_augmentation
 import utils.display_image
 import utils.functional
-import utils.data_augmentation
 
 
-def build_model(hp: keras_tuner.HyperParameters):
-    architecture_name = hp.Choice("architecture", ["deeplabv3"], default="deeplabv3")
+def build_model(hp: keras_tuner.HyperParameters) -> keras.Model:
+    """
+    Builds a tf model.
+
+    Hyperparameters:
+        - Architecture : controls which model architecture is used. The architectures are defined in the `architectures` module.
+        - Clip preprocessing : if true, a preprocessing layer is added that clips the input pixel values in the
+        [-200, 200] range.
+    """
+    architecture_name = hp.Choice("architecture", ["deeplabv3", "unet"], default="deeplabv3")
     base_model = architectures.architecture_builders[architecture_name]()
 
     final_model = keras.Sequential()
@@ -28,7 +49,20 @@ def build_model(hp: keras_tuner.HyperParameters):
 
 def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
                 train_dataset: tf.data.Dataset, validation_dataset: tf.data.Dataset = None,
-                *args, **kwargs):
+                *args, **kwargs) -> keras.callbacks.History:
+    """
+    Trains `model` using `train_dataset`. At each epoch, the performance is evaluated on `validation_dataset`.
+
+    Hyperparameters:
+        - weighted loss : if True, uses a weighted loss function
+        - horizontal flip : if True, a horizontal flip with 1/2 probability is applied on the training data each time it is shown to the model
+        - rotation : if > 0, a random rotation is applied on the training data each time it is shown to the model. This value controls the max angle of the random rotation.
+        - gaussian noise : if > 0, a random gaussian noise is applied on the training data each time it is shown to the model. This value controls the standard deviation for the gaussian noise.
+
+    Extra arguments are passed to the `fit` method of the model.
+
+    Returns the history object returned by the `fit` method of the model.
+    """
     train_dataset = _prepare_dataset_for_training(train_dataset, batch_size=config.TRAINING_BATCH_SIZE,
                                                   is_validation_dataset=False, hp=hp)
 
@@ -61,6 +95,14 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
 
 def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_validation_dataset: bool,
                                   hp: keras_tuner.HyperParameters) -> tf.data.Dataset:
+    """
+    Adds several transformations to the pipeline of the dataset
+
+    - Each image and mask is reshaped from (512, 512) to (512, 512, 1). This is necessary because this is the shape expected by the model architectures.
+    - Data augmentation is performed if `is_validation_dataset` is True
+    - If the `weighted loss´ hyperparameter is True, an array of pixel weights is added to each dataset element
+    - The dataset is batched with respect to `batch_size`
+    """
     add_color_axis = functools.partial(tf.reshape, shape=(512, 512, 1))
     dataset = dataset.map(utils.functional.function_on_pair(add_color_axis))
 
@@ -70,11 +112,13 @@ def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_
     if hp.Fixed("weighted loss", value=False):
         dataset = dataset.map(_add_pixel_weights)
 
+    # According to https://www.tensorflow.org/guide/data_performance
+    # prefetch increases the performance
     dataset = dataset.batch(batch_size).prefetch(buffer_size=tf.data.AUTOTUNE)
     return dataset
 
 
-def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperParameters):
+def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperParameters) -> tf.data.Dataset:
     if hp.Boolean("horizontal flip", default=True):
         def random_left_right_flip(image, mask):
             seed = tf.random.uniform(shape=(2,), maxval=10000, dtype=tf.int32)
@@ -100,7 +144,18 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
     return dataset
 
 
-def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
+def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor) -> tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
+    """
+    Takes as input the tensors for an image and a mask, and computes a weights tensor to be used by a weighted loss
+    function.
+
+    Returns
+        - The same image tensor
+        - The same mask tensor
+        - The weights tensor
+    """
+    # This code was inspired by https://www.tensorflow.org/tutorials/images/segmentation#optional_imbalanced_classes_and_class_weights
+    # Quite surprisingly, it makes the model perform worse. There may be an error in this implementation.
     mask_0_count = tf.cast(tf.math.count_nonzero(mask == 0), tf.float64)
     mask_1_count = tf.cast(tf.math.count_nonzero(mask), tf.float64)
     mask_size = tf.cast(tf.size(mask), tf.float64)
@@ -115,6 +170,10 @@ def _add_pixel_weights(image: tf.Tensor, mask: tf.Tensor):
 
 
 def visualize_prepared_dataset(*args, **kwargs):
+    """
+    Displays the images and masks from the first batch of the dataset returned by `_prepare_dataset_for_training`.
+    This function is used for debugging. It can be useful for visualizing the data augmentation results.
+    """
     dataset = _prepare_dataset_for_training(*args, **kwargs)
     images_batch, masks_batch = next(iter(dataset))
     for image, mask in zip(images_batch, masks_batch):
