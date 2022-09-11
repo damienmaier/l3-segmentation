@@ -1,4 +1,4 @@
-# Automatic segmentation of muscular and non-muscular area on L3 CT scan slices using deep learning
+# Automatic segmentation of muscular and non-muscular areas on L3 CT scan slices using deep learning
 
 ## The problem to solve
 
