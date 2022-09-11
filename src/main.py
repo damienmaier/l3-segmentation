@@ -1,7 +1,7 @@
 """
 This is the file to execute to run the code of this project.
 
-At the bottom of this file there is a commented line of code for each step of this project. To run a step, juste
+At the bottom of this file there is a commented line of code for each step of this project. To run a step, just
 uncomment the corresponding line and run this file.
 
 Each step will save its result on the disk in the location and format expected by the subsequent steps.
