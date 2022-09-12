@@ -73,7 +73,7 @@ def evaluate_performance_of_predictions_on_test_set():
         blue_masks=true_masks_dataset, red_masks=predictions_dataset,
         blue_mask_legend="true segmentation", red_mask_legend="model segmentation",
         display_image=True, display_blue_mask=True,
-        images_display_count=1, display_box_plots=True
+        images_display_count=10, display_box_plots=True
     )
 
 # -------- Prepare the dataset --------
