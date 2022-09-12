@@ -74,6 +74,7 @@ def load_original_dataset_from_disk() -> tuple[list[np.ndarray], list[np.ndarray
     images = [dataset_element.image_data for dataset_element in dataset_elements_with_correct_shape]
     masks = [dataset_element.mask_data for dataset_element in dataset_elements_with_correct_shape]
 
+    # Sometimes there are small isolated objects in the mask. Those are probably mistakes, we ignore them.
     clean_function = functools.partial(utils.mask_processing.remove_small_areas, max_pixel_count=4)
     masks = list(map(clean_function, masks))
 
