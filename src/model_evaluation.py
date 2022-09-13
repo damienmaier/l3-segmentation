@@ -14,7 +14,7 @@ import tensorflow as tf
 import utils.display_image
 
 
-def dice_coefficient_between_two_mask_tensors(mask1, mask2) -> tf.Tensor:
+def tensor_dice_coefficient_between_two_masks(mask1, mask2) -> tf.Tensor:
     """
     Computes the dice coefficient between `mask1` and `mask2`.
 
@@ -42,7 +42,7 @@ def dice_coefficient_between_two_masks(mask1, mask2) -> float:
 
     Returns the dice coefficient as a float.
     """
-    return float(dice_coefficient_between_two_mask_tensors(mask1, mask2))
+    return float(tensor_dice_coefficient_between_two_masks(mask1, mask2))
 
 
 def dice_coefficients_between_mask_batches(mask_batch1: tf.Tensor, mask_batch2: tf.Tensor) -> tf.Tensor:
@@ -56,7 +56,7 @@ def dice_coefficients_between_mask_batches(mask_batch1: tf.Tensor, mask_batch2: 
     Returns a 1D tf tensor of shape (<batch size>) containing the computed dice coefficients.
     """
     def dice_coefficient_between_two_stacked_masks(tensor):
-        return dice_coefficient_between_two_mask_tensors(tensor[0], tensor[1])
+        return tensor_dice_coefficient_between_two_masks(tensor[0], tensor[1])
 
     stacked_masks = tf.stack([mask_batch1, mask_batch2], axis=1)
     dice_coefficients = tf.vectorized_map(dice_coefficient_between_two_stacked_masks, stacked_masks)
