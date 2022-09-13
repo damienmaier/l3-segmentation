@@ -83,7 +83,7 @@ def evaluate_performance_of_predictions_on_test_set():
 # explore_models()
 
 # -------- Train the final model on the train set --------
-# train_best_model()
+# train_final_model()
 
 # -------- Compute the predictions on the test set --------
 # compute_predictions_for_test_set()
