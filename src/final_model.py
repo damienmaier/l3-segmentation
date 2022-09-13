@@ -59,6 +59,10 @@ def _build_post_processing_model() -> keras.Model:
     return post_processing_model_
 
 
+# This model is used by custom_keras_objects.dice
+# It is necessary that the present module provides the actual model instead of the function to build it
+# because otherwise custom_keras_objects.dice would rebuild the model each time it is executed
+# which would have a strong negative impact on performances
 post_processing_model = _build_post_processing_model()
 
 
@@ -96,6 +100,7 @@ def predict_from_images_iterable(images) -> list[np.ndarray]:
     Returns a list of numpy 2D arrays where each array is the mask predicted for the corresponding image, with the same
     resolution as this image.
     """
+
     def resize_image(image):
         if image.shape == (512, 512):
             return image
