@@ -70,9 +70,11 @@ def train_model(hp: keras_tuner.HyperParameters, model: keras.Model,
         validation_dataset = _prepare_dataset_for_training(validation_dataset, batch_size=config.TRAINING_BATCH_SIZE,
                                                            is_validation_dataset=True, hp=hp)
 
-    learning_rate = hp.Fixed(
+    learning_rate = hp.Float(
         "learning_rate",
-        value=2e-4
+        min_value=1e-5,
+        max_value=1e-3,
+        default=2e-4
     )
 
     model.compile(
@@ -109,7 +111,7 @@ def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_
     if not is_validation_dataset:
         dataset = _perform_data_augmentation(dataset, hp)
 
-    if hp.Fixed("weighted loss", value=False):
+    if hp.Boolean("weighted loss", default=False):
         dataset = dataset.map(_add_pixel_weights)
 
     # According to https://www.tensorflow.org/guide/data_performance
