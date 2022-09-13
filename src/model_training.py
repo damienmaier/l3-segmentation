@@ -40,7 +40,7 @@ def build_model(hp: keras_tuner.HyperParameters) -> keras.Model:
 
     final_model = keras.Sequential()
     final_model.add(keras.Input(shape=(512, 512, 1)))
-    if hp.Fixed("clip preprocessing", value=True):
+    if hp.Boolean("clip preprocessing", default=True):
         final_model.add(custom_keras_objects.ClipLayer())
     final_model.add(base_model)
 
@@ -119,7 +119,7 @@ def _prepare_dataset_for_training(dataset: tf.data.Dataset, batch_size: int, is_
 
 
 def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperParameters) -> tf.data.Dataset:
-    if hp.Boolean("horizontal flip", default=True):
+    if hp.Boolean("horizontal flip", default=False):
         def random_left_right_flip(image, mask):
             seed = tf.random.uniform(shape=(2,), maxval=10000, dtype=tf.int32)
             transformed_image = tf.image.stateless_random_flip_left_right(image, seed)
@@ -128,11 +128,11 @@ def _perform_data_augmentation(dataset: tf.data.Dataset, hp: keras_tuner.HyperPa
 
         dataset = dataset.map(random_left_right_flip)
 
-    rotation_angle = hp.Float("rotation", min_value=0, max_value=2, default=1)
+    rotation_angle = hp.Float("rotation", min_value=0, max_value=2, default=0)
     if rotation_angle != 0:
         dataset = dataset.map(utils.data_augmentation.generate_random_rotation_function(max_angle=rotation_angle))
 
-    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=30, default=30,
+    gaussian_noise_standard_deviation = hp.Float("gaussian noise", min_value=.1, max_value=30, default=0,
                                                  sampling="log")
     if gaussian_noise_standard_deviation != 0:
         def gaussian_noise(image, mask):
