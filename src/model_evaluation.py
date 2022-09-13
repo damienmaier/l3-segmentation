@@ -49,9 +49,9 @@ def dice_coefficients_between_mask_batches(mask_batch1: tf.Tensor, mask_batch2: 
     """
     Returns the dice coefficients between two mask batches.
 
-    `mask_batch1` and `mask_batch2` both have shape (<dim1>, <dim2>, <batch size>).
+    `mask_batch1` and `mask_batch2` both have shape (<batch size>, <dim1>, <dim2>).
 
-    Compute the dice coefficients between the fist masks of each batch, then between the second masks of each batch, etc.
+    Computes the dice coefficients between the fist masks of each batch, then between the second masks of each batch, etc.
 
     Returns a 1D tf tensor of shape (<batch size>) containing the computed dice coefficients.
     """
@@ -103,7 +103,7 @@ def model_performance_summary(images,
         -  `display_red_mask` displays the image with the red mask area highlighted in red
         -  `display_blue_mask` displays the image with the blue mask area highlighted in red
         -  `display_comparison` displays the image with both masks in a way the allows to compare them easily and with the dice coefficient and Hausdorff distance
-        -  `display_comparison_with_hausdorff_line` does the same, but also the the line for the Hausdorff distance is displayed
+        -  `display_comparison_with_hausdorff_line` does the same, but also the line for the Hausdorff distance is displayed
 
     `blue_mask_legend` and `red_mask_legend` are string that describe the blue masks and the red masks respectively.
     They are used for generating the legend when `display_comparison` or `display_comparison_with_hausdorff_line`
