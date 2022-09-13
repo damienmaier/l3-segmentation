@@ -72,6 +72,10 @@ def dice(true_masks: tf.Tensor, model_outputs: tf.Tensor) -> tf.Tensor:
     # the import has to be done here to avoid cyclic imports
     import final_model
 
+    # We compute the predicted masks exactly in the same way that the final model will compute the predicted masks.
+    # This ensures that this dice metric is comparable to the dice scores that we will get when evaluating
+    # the final model.
     predicted_masks = final_model.post_processing_model(model_outputs)
+
     true_masks_2d = tf.reshape(true_masks, shape=(-1, 512, 512))
     return model_evaluation.dice_coefficients_between_mask_batches(predicted_masks, true_masks_2d)
